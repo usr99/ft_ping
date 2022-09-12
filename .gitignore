@@ -1,0 +1,10 @@
+# vscode config
+.vscode
+
+# build files
+*.o
+libft.a
+
+# binaries
+ft_ping
+server
