@@ -6,40 +6,50 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:36:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/12 02:48:34 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/13 15:03:08 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <unistd.h>
 #include <stdio.h>
+#include <netdb.h>
 
 #include "ft_ping.h"
 #include "libft.h"
 
-void exit_error(const char* msg)
+extern t_ping_params g_params;
+
+void clean_all()
 {
-	ft_putstr_fd(msg, STDERR_FILENO);
+	if (g_params.sockfd)
+		close(g_params.sockfd);
+	if (g_params.address)
+		free(g_params.address);
+	if (g_params.hostname)
+		free(g_params.hostname);
+}
+
+void exit_error(const char* message)
+{
+	clean_all();
+	ft_putstr_fd(message, STDERR_FILENO);
 	exit(EXIT_FAILURE);
 }
 
-float get_duration_ms(struct timeval* from)
+void sigint_handler(int signum)
 {
-	struct timeval now;
-	gettimeofday(&now, NULL);
-
-	float seconds = (now.tv_sec - from->tv_sec) * 1000;
-	float milliseconds = (now.tv_usec - from->tv_usec) / 1000.f;
-	return seconds + milliseconds;
+	(void)signum;
+	g_params.finished = 1;
 }
 
-void log_reply(t_reply* reply, const char* hostname, const char* address)
+float get_duration_ms(struct timeval from)
 {
-	printf("%ld bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3fms\n",
-		sizeof(t_icmp),
-		hostname,
-		address,
-		reply->packet->header.un.echo.sequence,
-		reply->ipheader->ttl,
-		get_duration_ms(reply->timestamp)
-	);
+	struct timeval now;
+	float seconds;
+	float milliseconds;
+	
+	gettimeofday(&now, NULL);
+	seconds = (now.tv_sec - from.tv_sec) * 1000;
+	milliseconds = (now.tv_usec - from.tv_usec) / 1000.f;
+	return seconds + milliseconds;
 }

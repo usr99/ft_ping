@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 17:56:54 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/12 02:36:45 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/13 14:50:25 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,10 @@ typedef struct s_icmp
 
 typedef struct s_reply
 {
+	struct iphdr ip_header;
+	struct icmphdr icmp_header;
+	struct timeval timestamp;
 	in_addr_t source_addr;
-	struct iphdr* ipheader;
-	t_icmp* packet;
-	struct timeval* timestamp;
 } t_reply;
 
 t_icmp create_icmp_packet(pid_t pid, int count);

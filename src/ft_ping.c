@@ -6,87 +6,121 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/12 02:44:31 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/13 15:10:39 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdio.h>
 #include <signal.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <errno.h>
 
 #include "ft_ping.h"
 #include "libft.h"
 
-uint8_t g_continue = 1;
+t_ping_params g_params;
 
 int main(int argc, char **argv)
 {
-	int sock;
-	struct addrinfo hint;
-	struct addrinfo* results;
+	char address_str[INET_ADDRSTRLEN];
+	t_reply reply;
+
+	ft_memset(&g_params, 0, sizeof(t_ping_params));
 
 	if (argc != 2)
 		exit_error("no ip provided\n");
-
+	if (signal(SIGALRM, send_ping) == SIG_ERR)
+		exit_error("failed to set SIGALRM handling behavior\n");
 	if (signal(SIGINT, sigint_handler) == SIG_ERR)
 		exit_error("failed to set SIGINT handling behavior\n");
 
-	sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-	if (sock == -1)
+	init_ping(&g_params, argv[1]);
+
+	/* Convert ip address into a string format */
+	if (!inet_ntop(AF_INET, &g_params.address->sin_addr, address_str, INET_ADDRSTRLEN))	
+		exit_error("failed to convert address into a string format\n");
+
+	printf("PING %s (%s) %d(%d) bytes of data.\n", g_params.hostname, address_str, PAYLOAD_SIZE, PACKET_SIZE);
+	send_ping(SIGALRM);
+	while (!g_params.finished)
+	{
+		if (receive_reply(g_params.sockfd, &reply) == 0)
+		{
+			if (check_reply_type(&reply, g_params.address, g_params.pid))
+				log_reply(&reply, g_params.hostname, address_str);
+		}
+		else
+		{
+			if (errno != EAGAIN)
+				exit_error("read error\n");
+		}
+	}
+
+	clean_all();
+	return 0;
+}
+
+void init_ping(t_ping_params* params, const char* destination)
+{
+	struct addrinfo* results;
+	struct addrinfo hint;
+
+	/* Create a raw socket for ICMP protocol */
+	params->sockfd = socket(AF_INET, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMP);
+	if (g_params.sockfd == -1)
 		exit_error("failed to create socket\n");
 
+	/* DNS lookup to find the address under the domain name */
 	ft_memset(&hint, 0, sizeof(struct addrinfo));
 	hint.ai_family = AF_INET;
 	hint.ai_socktype = SOCK_RAW;
 	hint.ai_protocol = IPPROTO_ICMP;
 	hint.ai_flags = AI_CANONNAME;
-	if (getaddrinfo(argv[1], NULL, &hint, &results) != 0)
-	{
-		close(sock);
+	if (getaddrinfo(destination, NULL, &hint, &results) != 0)
 		exit_error("failed to resolve host\n");
-	}
 
-	struct sockaddr_in* addr = (struct sockaddr_in*)results->ai_addr;
-	char buffer[INET_ADDRSTRLEN] = { '\0' };
-
-	if (inet_ntop(AF_INET, &addr->sin_addr, buffer, INET_ADDRSTRLEN) == NULL)
-	{
-		close(sock);
-		freeaddrinfo(results);
-		exit_error("failed to translate address in ASCII form\n");
-	}
-
-	const pid_t pid = getpid();
-	uint16_t count = 1;
-	printf("PING %s (%s) %d(%d) bytes of data.\n", results->ai_canonname, buffer, PAYLOAD_SIZE, PACKET_SIZE);
-	while (g_continue)
-	{
-		/* Build ICMP packet for ECHO REQUEST */
-		t_icmp packet = create_icmp_packet(pid, count);
-
-		if (sendto(sock, &packet, sizeof(t_icmp), 0, (struct sockaddr*)addr, sizeof(struct sockaddr_in)) == -1)
-			exit_error("failed to send message\n");
-
-		t_reply reply;
-		if (receive_reply(sock, &reply) == -1)
-			exit_error("failed to receive message\n");
-
-		if (check_reply_type(&reply, addr, pid))
-			log_reply(&reply, results->ai_canonname, buffer);
-		free((char*)reply.packet - IPHEADER_SIZE);
-
-		sleep(1);
-		count++;
-	}
-
-	close(sock);
+	/* Copy address and hostname before freeing the results */
+	params->address = malloc(sizeof(struct sockaddr_in));
+	if (!params->address)
+		exit_error("alloc failed\n");
+	if (results->ai_addrlen != sizeof(struct sockaddr_in))
+		exit_error("bad address structure\n");
+	ft_memcpy(params->address, results->ai_addr, results->ai_addrlen);
+	params->hostname = ft_strdup(results->ai_canonname);
+	if (!params->hostname)
+		exit_error("alloc failed\n");
 	freeaddrinfo(results);
-	return 0;
+
+	/* Initialize the last fields */
+	params->pid = getpid();
+	params->icmp_count = 1;
 }
 
-void sigint_handler(int signum)
+void send_ping(int signum)
 {
 	(void)signum;
-	g_continue = 0;
+	if (g_params.finished)
+		return ;
+
+	t_icmp packet = create_icmp_packet(g_params.pid, g_params.icmp_count);
+	if (sendto(g_params.sockfd, &packet, sizeof(t_icmp), 0, (struct sockaddr*)g_params.address, sizeof(struct sockaddr_in)) == -1)
+		exit_error("failed to send message\n");
+	g_params.icmp_count++;
+
+	alarm(g_params.finished ? 0 : 1);
+}
+
+void log_reply(t_reply* reply, const char* hostname, const char* address)
+{
+	printf("%ld bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3fms\n",
+		sizeof(t_icmp),
+		hostname,
+		address,
+		reply->icmp_header.un.echo.sequence,
+		reply->ip_header.ttl,
+		get_duration_ms(reply->timestamp)
+	);
 }

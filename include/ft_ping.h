@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:46:56 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/12 02:40:49 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/13 15:11:01 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,10 +16,23 @@
 # include <sys/time.h>
 # include "icmp.h"
 
-void sigint_handler(int signum);
+typedef struct s_ping_params
+{
+	int sockfd;
+	pid_t pid;
+	int icmp_count;
+	struct sockaddr_in* address;
+	char* hostname;
+	int finished;
+} t_ping_params;
 
-void exit_error(const char* msg);
-float get_duration_ms(struct timeval* from);
+void init_ping(t_ping_params* params, const char* destination);
+void send_ping(int signum);
 void log_reply(t_reply* reply, const char* hostname, const char* address);
+
+void clean_all();
+void exit_error(const char* message);
+void sigint_handler(int signum);
+float get_duration_ms(struct timeval from);
 
 #endif
