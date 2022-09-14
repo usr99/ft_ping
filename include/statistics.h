@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/13 15:16:16 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/13 20:40:10 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/13 22:38:57 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,8 @@ typedef struct s_ping_request
 
 t_ping_request* push_new_node(t_list** requests);
 t_list* get_stat(t_list* requests, int icmpseq);
+float compute_average_rtt(t_list* requests, int* sent, int* recv, float* min, float* max);
+float compute_standard_deviation(t_list* requests, float average, int req_sent);
 void print_statistics(t_list* requests, struct timeval start_time);
 
 #endif

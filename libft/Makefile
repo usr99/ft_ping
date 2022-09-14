@@ -43,7 +43,7 @@ SRCS	= ft_memset.c				\
 OBJS	= ${SRCS:.c=.o}
 BONUS_C	= ft_lstnew.c ft_lstadd_front.c ft_lstsize.c ft_lstlast.c ft_lstadd_back.c \
 		  ft_lstdelone.c ft_lstclear.c ft_lstiter.c ft_lstmap.c ft_lstdup.c ft_itoa_base.c \
-		  get_next_line.c ft_free_map.c ft_clearstr.c
+		  get_next_line.c ft_free_map.c ft_clearstr.c ft_pow.c ft_sqrt.c ft_abs.c
 BONUS_O	= ${BONUS_C:.c=.o}
 CC		= gcc
 CFLAGS	= -Wall -Wextra -Werror

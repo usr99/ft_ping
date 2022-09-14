@@ -44,38 +44,67 @@ t_list* get_stat(t_list* ping_request, int icmpseq)
 	return ping_request;
 }
 
-void print_statistics(t_list* requests, struct timeval start_time)
+float compute_average_rtt(t_list* requests, int* sent, int* recv, float* min, float* max)
 {
 	t_ping_request* data;
-	t_list* node = requests;
-
-	int loss_percentage;
-	int req_sent;
-	int res_recvd;
-
-	float min = -1.f;
-	float max = -1.f;
+	t_list* node;
 	float avg = 0.f;
-	float mdev = 0.f;
 
-	while (node)
+	*sent = 0;
+	*recv = 0;
+	*min = -1.f;
+	*max = -1.f;
+
+	/*
+	** Compute statistics
+	** count of sent/received packets
+	** min, avg and max round-trip time
+	*/
+	for (node = requests; node != NULL; node = node->next, (*sent)++)
 	{
 		data = (t_ping_request*)node->content;
 		if (data->state == SUCCESS)
-			res_recvd++;
+			(*recv)++;
 
-		if (min == -1.f || data->elapsed_time < min)
-			min = data->elapsed_time;
-		if (max == -1.f || data->elapsed_time > max)
-			max = data->elapsed_time;
+		if (*min == -1.f || data->elapsed_time < *min)
+			*min = data->elapsed_time;
+		if (*max == -1.f || data->elapsed_time > *max)
+			*max = data->elapsed_time;
 
 		avg += data->elapsed_time;
-		req_sent++;
-		node = node->next;
 	}
+	if (*sent != 0)
+		avg /= *sent;
 
+	return avg;
+}
+
+float compute_standard_deviation(t_list* requests, float average, int req_sent)
+{
+	t_ping_request* data;
+	t_list* node;
+	float mdev = 0.f;
+
+	/* Compute the standard deviation from the average round-trip time */
+	for (node = requests; node != NULL; node = node->next)
+	{
+		data = (t_ping_request*)node->content;
+		mdev += ft_fpow(data->elapsed_time - average, 2);
+	}
+	if (req_sent != 0)
+		mdev = ft_fsqrt(mdev / req_sent);
+
+	return mdev;
+}
+
+void print_statistics(t_list* requests, struct timeval start_time)
+{
+	int req_sent, res_recvd, loss_percentage;
+	float min, max, avg, mdev;
+
+	avg = compute_average_rtt(requests, &req_sent, &res_recvd, &min, &max);
+	mdev = compute_standard_deviation(requests, avg, req_sent);
 	loss_percentage = 100 * (req_sent - res_recvd) / req_sent;
-	avg /= req_sent;
 
 	printf("\n--- %s ping statistics ---\n", g_params.hostname);
 	printf(

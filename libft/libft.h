@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/09/16 16:52:13 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/10 17:51:20 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/13 22:23:07 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,5 +122,11 @@ int				get_next_line(int fd, char **line);
 void			ft_free_map(char **map);
 t_list			*ft_lstdup(t_list *src, int length);
 char			*ft_clearstr(char *str);
+int				ft_pow(int nb, int power);
+float			ft_fpow(float nb, int power);
+int				ft_sqrt(int nb);
+float			ft_fsqrt(float nb);
+int				ft_abs(int x);
+float			ft_fabs(float x);
 
 #endif
