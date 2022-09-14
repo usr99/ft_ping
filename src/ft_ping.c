@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/13 17:35:18 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 00:22:25 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,14 +61,6 @@ int main(int argc, char **argv)
 				exit_error("read error\n");
 		}
 	}
-
-	// t_list* node = g_params.requests;
-	// while (node)
-	// {
-	// 	t_ping_request* req = (t_ping_request*)node->content;
-	// 	printf("%d | %f\n", req->state, req->elapsed_time);
-	// 	node = node->next;
-	// }
 
 	print_statistics(g_params.requests, start);
 	clean_all();
@@ -131,12 +123,18 @@ void send_ping(int signum)
 
 void log_reply(t_reply* reply, const char* hostname, const char* address)
 {
-	printf("%ld bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3fms\n",
+	float rtt = get_duration_ms(reply->timestamp);
+	int precision = 1;
+
+	if (rtt < 1.f)
+		precision = 3;
+
+	printf("%ld bytes from %s (%s): icmp_seq=%d ttl=%d time=%.*f ms\n",
 		sizeof(t_icmp),
 		hostname,
 		address,
 		reply->icmp_header.un.echo.sequence,
 		reply->ip_header.ttl,
-		get_duration_ms(reply->timestamp)
+		precision, rtt
 	);
 }
