@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/13 21:11:58 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/13 22:23:50 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 00:06:40 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,8 +32,8 @@ int	ft_sqrt(int nb)
 
 float ft_fsqrt(float number)
 {
-	long i;
-	float x2, y;
+	long i = 0;
+	float x2 = 0, y = 0;
 	const float threehalfs = 1.5F;
 
 	x2 = number * 0.5F;
