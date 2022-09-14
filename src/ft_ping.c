@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 17:13:31 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 17:20:10 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,8 @@ int main(int argc, char **argv)
 		exit_error("failed to set SIGALRM handling behavior\n");
 	if (signal(SIGINT, sigint_handler) == SIG_ERR)
 		exit_error("failed to set SIGINT handling behavior\n");
+	if (signal(SIGQUIT, print_stats_sigquit) == SIG_ERR)
+		exit_error("failed to set SIGQUIT handling behavior\n");
 
 	init_ping(&g_params, argv[1]);
 

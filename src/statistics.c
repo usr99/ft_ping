@@ -103,6 +103,21 @@ float compute_standard_deviation(t_list* requests, float average, int req_sent)
 	return mdev;
 }
 
+float compute_exponential_moving_avg(t_list* requests)
+{
+	t_ping_request* data;
+	t_list* node;
+	float ewma = 0.f;
+
+	/* Compute the Exponentially Weighted Moving Average (EWMA) of RTTs */
+	for (node = requests; node != NULL; node = node->next)
+	{
+		data = (t_ping_request*)node->content;
+		ewma = 0.9 * ewma + 0.1 * data->elapsed_time;
+	}
+	return ewma;
+}
+
 int print_statistics(t_list* requests, struct timeval start_time)
 {
 	int req_sent, res_recvd, loss_percentage;
@@ -121,4 +136,22 @@ int print_statistics(t_list* requests, struct timeval start_time)
 		min, avg, max, mdev
 	);
 	return res_recvd;
+}
+
+void print_stats_sigquit(int signum)
+{
+	int req_sent, res_recvd, loss_percentage;
+	float min, max, avg, ewma;
+
+	(void)signum;
+
+	avg = compute_average_rtt(g_params.requests, &req_sent, &res_recvd, &min, &max);
+	ewma = compute_exponential_moving_avg(g_params.requests);
+	loss_percentage = 100 * (req_sent - res_recvd) / req_sent;
+
+	printf(
+		"%d/%d packets, %d%% loss, min/avg/ewma/max = %.3f/%.3f/%.3f/%.3f ms\n",
+		res_recvd, req_sent, loss_percentage,
+		min, avg, ewma, max
+	);
 }
