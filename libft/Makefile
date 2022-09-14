@@ -50,23 +50,23 @@ CFLAGS	= -Wall -Wextra -Werror
 RM		= rm -rf
 
 .c.o:
-		${CC} ${CFLAGS} -c $< -o ${<:.c=.o}
+		@${CC} ${CFLAGS} -c $< -o ${<:.c=.o}
 
 ${NAME}:${OBJS}
-		ar -rcs ${NAME} ${OBJS}
+		@ar -rcs ${NAME} ${OBJS}
 
 all:	${NAME}
 
 bonus:	all
-		${CC} ${CFLAGS} -c ${BONUS_C}
-		ar -rcs ${NAME} ${BONUS_O}
+		@${CC} ${CFLAGS} -c ${BONUS_C}
+		@ar -rcs ${NAME} ${BONUS_O}
 
 clean:
-		${RM} ${OBJS}
-		${RM} ${BONUS_O}
+		@${RM} ${OBJS}
+		@${RM} ${BONUS_O}
 
 fclean:	clean
-		${RM} ${NAME}
+		@${RM} ${NAME}
 		
 re: 	fclean all
 
