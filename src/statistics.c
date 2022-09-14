@@ -137,9 +137,13 @@ int print_statistics(t_list* requests, struct timeval start_time)
 		"%d packets transmitted, %d received, %d%% packet loss, time %dms\n",
 		req_sent, res_recvd, loss_percentage, (int)get_duration_ms(start_time)
 	);
-	printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n",
-		min, avg, max, mdev
-	);
+
+	if (res_recvd != 0)
+	{
+		printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n",
+			min, avg, max, mdev
+		);
+	}
 	return res_recvd;
 }
 
