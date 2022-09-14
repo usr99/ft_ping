@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/13 15:16:16 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 17:42:59 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 19:05:13 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ t_list* get_stat(t_list* requests, int icmpseq);
 float compute_average_rtt(t_list* requests, int* sent, int* recv, float* min, float* max);
 float compute_standard_deviation(t_list* requests, float average, int req_sent);
 float compute_exponential_moving_avg(t_list* requests);
-int print_total_statistics(t_list* requests, struct timeval start_time);
+int print_statistics(t_list* requests, struct timeval start_time);
 void print_stats_sigquit(int signum);
 
 #endif

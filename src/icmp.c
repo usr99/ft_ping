@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 17:56:39 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 17:02:57 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 19:02:32 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,8 @@ t_ping_request* get_request(t_reply* reply, struct sockaddr_in* addr, pid_t pid)
 {
 	t_list* node;
 	t_ping_request* req;
+	t_ping_request* duplicate;
+	t_reply_code new_state;
 	
 	/* Check that the packet is ours */
 	if (reply->source_addr != addr->sin_addr.s_addr)
@@ -104,8 +106,22 @@ t_ping_request* get_request(t_reply* reply, struct sockaddr_in* addr, pid_t pid)
 		return NULL; // icmp sequence doesn't match any of the requests sent
 	req = (t_ping_request*)node->content;
 
-	req->state = get_reply_state(req, reply);
-	req->elapsed_time = get_duration_ms(reply->timestamp);
+	new_state = get_reply_state(req, reply);
+	if (new_state == DUPLICATE)
+	{
+		/* Duplicate the ping request for further rtt calculations */
+		duplicate = push_new_node(&g_params.requests, req->icmp_sequence);
+		if (!duplicate)
+			exit_error("alloc failed\n");
+		duplicate->elapsed_time = get_duration_ms(reply->timestamp);
+		duplicate->state = DUPLICATE;
+	}
+	else
+	{
+		/* Update ping request status */
+		req->state = new_state;
+		req->elapsed_time = get_duration_ms(reply->timestamp);
+	}
 	return req;
 }
 

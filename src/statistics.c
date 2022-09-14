@@ -55,6 +55,7 @@ float compute_average_rtt(t_list* requests, int* sent, int* recv, float* min, fl
 	t_ping_request* data;
 	t_list* node;
 	float avg = 0.f;
+	int n_duplicates = 0;
 
 	*sent = 0;
 	*recv = 0;
@@ -66,11 +67,15 @@ float compute_average_rtt(t_list* requests, int* sent, int* recv, float* min, fl
 	** count of sent/received packets
 	** min, avg and max round-trip time
 	*/
-	for (node = requests; node != NULL; node = node->next, (*sent)++)
+	for (node = requests; node != NULL; node = node->next)
 	{
 		data = (t_ping_request*)node->content;
 		if (data->state == SUCCESS)
 			(*recv)++;
+		if (data->state != DUPLICATE)
+			(*sent)++;
+		else
+			n_duplicates++;
 
 		if (*min == -1.f || data->elapsed_time < *min)
 			*min = data->elapsed_time;
@@ -79,8 +84,8 @@ float compute_average_rtt(t_list* requests, int* sent, int* recv, float* min, fl
 
 		avg += data->elapsed_time;
 	}
-	if (*sent != 0)
-		avg /= *sent;
+	if (*sent + n_duplicates != 0)
+		avg /= (*sent + n_duplicates);
 
 	return avg;
 }
