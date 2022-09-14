@@ -17,7 +17,7 @@
 
 extern t_ping_params g_params;
 
-t_ping_request* push_new_node(t_list** ping_request)
+t_ping_request* push_new_node(t_list** ping_request, int seq)
 {
 	t_ping_request* data;
 
@@ -26,22 +26,28 @@ t_ping_request* push_new_node(t_list** ping_request)
 		return NULL;
 	data->state = WAITING_REPLY;
 	data->elapsed_time = 0;
+	data->icmp_sequence = seq;
 
 	t_list* node = ft_lstnew(data);
 	if (!node)
 		return NULL;
 	
-	ft_lstadd_back(ping_request, node);
+	ft_lstadd_front(ping_request, node);
 	return data;
 }
 
-t_list* get_stat(t_list* ping_request, int icmpseq)
+t_list* get_stat(t_list* requests, int icmpseq)
 {
-	int count;
+	t_list* req;
+	t_ping_request* data;
 
-	for (count = 1; count != icmpseq && ping_request != NULL; count++)
-		ping_request = ping_request->next;
-	return ping_request;
+	for (req = requests; req != NULL; req = req->next)
+	{
+		data = (t_ping_request*)req->content;
+		if (data->icmp_sequence == icmpseq)
+			break ;
+	}
+	return req;
 }
 
 float compute_average_rtt(t_list* requests, int* sent, int* recv, float* min, float* max)

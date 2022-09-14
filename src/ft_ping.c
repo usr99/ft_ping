@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 00:22:25 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 00:24:47 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,7 @@ void send_ping(int signum)
 	if (sendto(g_params.sockfd, &packet, sizeof(t_icmp), 0, (struct sockaddr*)g_params.address, sizeof(struct sockaddr_in)) == -1)
 		exit_error("failed to send message\n");
 
-	if (!push_new_node(&g_params.requests))
+	if (!push_new_node(&g_params.requests, g_params.icmp_count))
 		exit_error("alloc failed\n");
 
 	g_params.icmp_count++;
