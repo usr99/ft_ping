@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 17:56:39 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/13 17:18:50 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 17:02:57 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,16 +32,16 @@ t_icmp create_icmp_packet(pid_t pid, int count)
 	ft_memcpy(packet.payload, &tv, sizeof(tv));
 	
 	packet.header.checksum = 0;
-	packet.header.checksum = compute_checksum((uint16_t*)&packet);
+	packet.header.checksum = compute_checksum((uint16_t*)&packet, sizeof(t_icmp));
 	return packet;
 }
 
-uint16_t compute_checksum(uint16_t* data)
+uint16_t compute_checksum(uint16_t* data, size_t bytes)
 {
 	uint32_t sum = data[0];
 	size_t i;
 
-	for (i = 1; i < sizeof(t_icmp) / 2; i++)
+	for (i = 1; i < bytes / 2; i++)
 	{
 		sum += data[i];
 		if (sum >= 0x10000)
@@ -116,16 +116,23 @@ t_reply_code get_reply_state(t_ping_request* req, t_reply* reply)
 		return DUPLICATE;
 	
 	/* Compare ICMP checksums */
-	t_icmp buf;
-	buf.header = reply->icmp_header;
-	ft_memset(buf.payload, 0, PAYLOAD_SIZE);
-	ft_memcpy(buf.payload, &reply->timestamp, sizeof(struct timeval));
-	buf.header.checksum = 0;
-	buf.header.checksum = compute_checksum((uint16_t*)&buf);
-	if (reply->icmp_header.checksum != buf.header.checksum)
+	t_icmp icmp_cpy;
+	icmp_cpy.header = reply->icmp_header;
+	ft_memset(icmp_cpy.payload, 0, PAYLOAD_SIZE);
+	ft_memcpy(icmp_cpy.payload, &reply->timestamp, sizeof(struct timeval));
+	icmp_cpy.header.checksum = 0;
+	icmp_cpy.header.checksum = compute_checksum((uint16_t*)&icmp_cpy, sizeof(t_icmp));
+	if (reply->icmp_header.checksum != icmp_cpy.header.checksum)
 		return CORRUPTED;
 
 	/* Compare IP checksums */
+	uint8_t ip_cpy[PACKET_SIZE];
+	ft_memcpy(ip_cpy, &reply->ip_header, sizeof(struct iphdr));
+	ft_memcpy(ip_cpy + IPHEADER_SIZE, &icmp_cpy, sizeof(t_icmp));
+	((struct iphdr*)ip_cpy)->check = 0;
+	((struct iphdr*)ip_cpy)->check = compute_checksum((uint16_t*)ip_cpy, PACKET_SIZE);
+	if (reply->ip_header.check != ((struct iphdr*)ip_cpy)->check)
+		return CORRUPTED;
 
 	return SUCCESS;
 }

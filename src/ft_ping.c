@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 00:24:47 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 16:57:48 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 		{
 			t_ping_request* req = get_request(&reply, g_params.address, g_params.pid);
 			if (req != NULL)
-				log_reply(&reply, g_params.hostname, address_str);
+				log_reply(&reply, req, address_str);
 		}
 		else
 		{
@@ -121,20 +121,25 @@ void send_ping(int signum)
 	alarm(g_params.finished ? 0 : 1);
 }
 
-void log_reply(t_reply* reply, const char* hostname, const char* address)
+void log_reply(t_reply* reply, t_ping_request* req, const char* address)
 {
-	float rtt = get_duration_ms(reply->timestamp);
 	int precision = 1;
 
-	if (rtt < 1.f)
-		precision = 3;
-
-	printf("%ld bytes from %s (%s): icmp_seq=%d ttl=%d time=%.*f ms\n",
-		sizeof(t_icmp),
-		hostname,
-		address,
-		reply->icmp_header.un.echo.sequence,
-		reply->ip_header.ttl,
-		precision, rtt
-	);
+	if (req->state == SUCCESS)
+	{
+		if (req->elapsed_time < 1.f)
+			precision = 3;
+		printf("%ld bytes from %s (%s): icmp_seq=%d ttl=%d time=%.*f ms\n",
+			sizeof(t_icmp),
+			g_params.hostname,
+			address,
+			req->icmp_sequence,
+			reply->ip_header.ttl,
+			precision, req->elapsed_time
+		);
+	}
+	else if (req->state == DUPLICATE)
+		printf("%d was duplicated\n", req->icmp_sequence);
+	else if (req->state == CORRUPTED)
+		printf("%d was corrupted\n", req->icmp_sequence);
 }
