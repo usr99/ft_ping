@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 16:57:48 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 17:13:31 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ int main(int argc, char **argv)
 {
 	struct timeval start;
 	char address_str[INET_ADDRSTRLEN];
+	int replies_received;
 
 	ft_memset(&g_params, 0, sizeof(t_ping_params));
 
@@ -62,9 +63,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	print_statistics(g_params.requests, start);
+	replies_received = print_statistics(g_params.requests, start);
 	clean_all();
-	return 0;
+	return replies_received ? 0 : 1;
 }
 
 void init_ping(t_ping_params* params, const char* destination)

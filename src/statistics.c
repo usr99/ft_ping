@@ -103,7 +103,7 @@ float compute_standard_deviation(t_list* requests, float average, int req_sent)
 	return mdev;
 }
 
-void print_statistics(t_list* requests, struct timeval start_time)
+int print_statistics(t_list* requests, struct timeval start_time)
 {
 	int req_sent, res_recvd, loss_percentage;
 	float min, max, avg, mdev;
@@ -120,4 +120,5 @@ void print_statistics(t_list* requests, struct timeval start_time)
 	printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n",
 		min, avg, max, mdev
 	);
+	return res_recvd;
 }

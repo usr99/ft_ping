@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:36:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/13 17:22:30 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 17:13:48 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ void exit_error(const char* message)
 {
 	clean_all();
 	ft_putstr_fd(message, STDERR_FILENO);
-	exit(EXIT_FAILURE);
+	exit(2);
 }
 
 void sigint_handler(int signum)
