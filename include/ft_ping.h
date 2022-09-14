@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:46:56 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/13 15:11:01 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/13 17:08:53 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include <sys/time.h>
 # include "icmp.h"
+# include "libft.h"
 
 typedef struct s_ping_params
 {
@@ -23,6 +24,7 @@ typedef struct s_ping_params
 	int icmp_count;
 	struct sockaddr_in* address;
 	char* hostname;
+	t_list* requests;
 	int finished;
 } t_ping_params;
 

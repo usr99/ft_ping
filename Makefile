@@ -10,7 +10,7 @@ CC		= gcc
 INC 	= -I ./include -I ./libft
 
 SRCDIR	= ./src/
-SRC		= ft_ping.c icmp.c utils.c
+SRC		= ft_ping.c icmp.c statistics.c utils.c
 
 OBJDIR	= ./objs/
 OBJS	= ${addprefix ${OBJDIR}, ${SRC:.c=.o}}
@@ -31,7 +31,7 @@ ${OBJDIR}:
 	mkdir -p ${OBJDIR}
 
 ${LIBFT}:
-	${MAKE} -C libft
+	${MAKE} bonus -C libft
 
 ##################################################
 #  				   USUAL RULES					 #./

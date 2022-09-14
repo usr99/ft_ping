@@ -6,14 +6,14 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 17:56:39 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/13 14:53:40 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/13 17:18:50 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <sys/time.h>
 #include <netdb.h>
 #include "ft_ping.h"
-#include "libft.h"
+#include "statistics.h"
 
 extern t_ping_params g_params;
 
@@ -85,13 +85,47 @@ int receive_reply(int sock, t_reply* reply)
 	return 0;
 }
 
-int check_reply_type(t_reply* reply, struct sockaddr_in* addr, pid_t pid)
+t_ping_request* get_request(t_reply* reply, struct sockaddr_in* addr, pid_t pid)
 {
+	t_list* node;
+	t_ping_request* req;
+	
+	/* Check that the packet is ours */
 	if (reply->source_addr != addr->sin_addr.s_addr)
-		return 0; // not sent by the pinged host
+		return NULL; // not sent by the pinged host
 	if (reply->icmp_header.type != ICMP_ECHOREPLY)
-		return 0; // not a ping reply
+		return NULL; // not a ping reply
 	if (reply->icmp_header.un.echo.id != pid)
-		return 0; // reply for another ping process
-	return 1;
+		return NULL; // reply for another ping process
+
+	/* Check the icmp sequence */
+	node = get_stat(g_params.requests, reply->icmp_header.un.echo.sequence);
+	if (!node)
+		return NULL; // icmp sequence doesn't match any of the requests sent
+	req = (t_ping_request*)node->content;
+
+	req->state = get_reply_state(req, reply);
+	req->elapsed_time = get_duration_ms(reply->timestamp);
+	return req;
+}
+
+t_reply_code get_reply_state(t_ping_request* req, t_reply* reply)
+{
+	/* Check that we had not already received a reply for this ping request */
+	if (req->state != WAITING_REPLY)
+		return DUPLICATE;
+	
+	/* Compare ICMP checksums */
+	t_icmp buf;
+	buf.header = reply->icmp_header;
+	ft_memset(buf.payload, 0, PAYLOAD_SIZE);
+	ft_memcpy(buf.payload, &reply->timestamp, sizeof(struct timeval));
+	buf.header.checksum = 0;
+	buf.header.checksum = compute_checksum((uint16_t*)&buf);
+	if (reply->icmp_header.checksum != buf.header.checksum)
+		return CORRUPTED;
+
+	/* Compare IP checksums */
+
+	return SUCCESS;
 }

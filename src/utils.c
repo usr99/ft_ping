@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:36:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/13 15:03:08 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/13 17:22:30 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 #include <netdb.h>
 
 #include "ft_ping.h"
-#include "libft.h"
 
 extern t_ping_params g_params;
 
@@ -27,6 +26,8 @@ void clean_all()
 		free(g_params.address);
 	if (g_params.hostname)
 		free(g_params.hostname);
+	if (g_params.requests)
+		ft_lstclear(&g_params.requests, &free);
 }
 
 void exit_error(const char* message)

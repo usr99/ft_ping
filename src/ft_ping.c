@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/13 15:10:39 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/13 17:35:18 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,14 +19,14 @@
 #include <errno.h>
 
 #include "ft_ping.h"
-#include "libft.h"
+#include "statistics.h"
 
 t_ping_params g_params;
 
 int main(int argc, char **argv)
 {
+	struct timeval start;
 	char address_str[INET_ADDRSTRLEN];
-	t_reply reply;
 
 	ft_memset(&g_params, 0, sizeof(t_ping_params));
 
@@ -44,12 +44,15 @@ int main(int argc, char **argv)
 		exit_error("failed to convert address into a string format\n");
 
 	printf("PING %s (%s) %d(%d) bytes of data.\n", g_params.hostname, address_str, PAYLOAD_SIZE, PACKET_SIZE);
+	gettimeofday(&start, NULL);
 	send_ping(SIGALRM);
 	while (!g_params.finished)
 	{
+		t_reply reply;
 		if (receive_reply(g_params.sockfd, &reply) == 0)
 		{
-			if (check_reply_type(&reply, g_params.address, g_params.pid))
+			t_ping_request* req = get_request(&reply, g_params.address, g_params.pid);
+			if (req != NULL)
 				log_reply(&reply, g_params.hostname, address_str);
 		}
 		else
@@ -59,6 +62,15 @@ int main(int argc, char **argv)
 		}
 	}
 
+	// t_list* node = g_params.requests;
+	// while (node)
+	// {
+	// 	t_ping_request* req = (t_ping_request*)node->content;
+	// 	printf("%d | %f\n", req->state, req->elapsed_time);
+	// 	node = node->next;
+	// }
+
+	print_statistics(g_params.requests, start);
 	clean_all();
 	return 0;
 }
@@ -97,6 +109,7 @@ void init_ping(t_ping_params* params, const char* destination)
 	/* Initialize the last fields */
 	params->pid = getpid();
 	params->icmp_count = 1;
+	params->requests = NULL;
 }
 
 void send_ping(int signum)
@@ -108,8 +121,11 @@ void send_ping(int signum)
 	t_icmp packet = create_icmp_packet(g_params.pid, g_params.icmp_count);
 	if (sendto(g_params.sockfd, &packet, sizeof(t_icmp), 0, (struct sockaddr*)g_params.address, sizeof(struct sockaddr_in)) == -1)
 		exit_error("failed to send message\n");
-	g_params.icmp_count++;
 
+	if (!push_new_node(&g_params.requests))
+		exit_error("alloc failed\n");
+
+	g_params.icmp_count++;
 	alarm(g_params.finished ? 0 : 1);
 }
 
