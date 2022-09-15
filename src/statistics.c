@@ -161,8 +161,8 @@ void print_stats_sigquit(int signum)
 	ewma = compute_exponential_moving_avg(g_params.requests);
 	loss_percentage = 100 * (req_sent - res_recvd) / req_sent;
 
-	printf("%d/%d packets, %d%% loss", res_recvd, req_sent, loss_percentage);
+	dprintf(STDERR_FILENO, "%d/%d packets, %d%% loss", res_recvd, req_sent, loss_percentage);
 	if (res_recvd != 0)
-		printf(", min/avg/ewma/max = %.3f/%.3f/%.3f/%.3f ms", min, avg, ewma, max);
-	printf("\n");
+		dprintf(STDERR_FILENO, ", min/avg/ewma/max = %.3f/%.3f/%.3f/%.3f ms", min, avg, ewma, max);
+	dprintf(STDERR_FILENO, "\n");
 }
