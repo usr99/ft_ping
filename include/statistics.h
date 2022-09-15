@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/13 15:16:16 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 20:08:32 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 23:36:26 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,29 @@
 
 typedef enum e_reply_code
 {
-	WAITING_REPLY,
-	NOT_OURS,
 	DUPLICATE,
 	CORRUPTED,
-	SUCCESS
+	ICMP_ERR,
+	SUCCESS,
+	WAITING_REPLY
 } t_reply_code;
+
+typedef struct s_statistics
+{
+	// packets
+	int sent;
+	int replies[4];
+	int loss;
+	// int recv;
+	// int duplicates;
+	// int corrupted;
+	// int errors;
+
+	// round-trip time
+	float min;
+	float max;
+	float avg;
+} t_statistics;
 
 typedef struct s_ping_request
 {
@@ -33,7 +50,7 @@ typedef struct s_ping_request
 
 t_ping_request* push_new_node(t_list** requests, int seq);
 t_list* get_stat(t_list* requests, int icmpseq);
-float compute_average_rtt(t_list* requests, int* sent, int* recv, float* min, float* max);
+t_statistics compute_statistics(t_list* requests);
 float compute_standard_deviation(t_list* requests, float average, int req_sent);
 float compute_exponential_moving_avg(t_list* requests);
 int print_statistics(t_list* requests, const char* destination, struct timeval start_time);
