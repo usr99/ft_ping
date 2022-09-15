@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:46:56 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 19:27:22 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 22:43:48 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,12 @@ typedef struct s_ping_params
 	int finished;
 } t_ping_params;
 
+/* ft_ping.c */
 void init_ping(t_ping_params* params, const char* destination, char* addrname);
 void send_ping(int signum);
 void log_reply(t_reply* reply, t_ping_request* req, const char* address);
 
+/* utils.c */
 void clean_all();
 void exit_error(const char* message);
 void sigint_handler(int signum);

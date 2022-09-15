@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 20:09:12 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 22:44:11 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,17 +20,18 @@
 
 #include "ft_ping.h"
 #include "statistics.h"
+#include "args.h"
 
 t_ping_params g_params;
 
 int main(int argc, char **argv)
 {
 	struct timeval start;
-	char address_str[INET_ADDRSTRLEN];
+	char* destination_addr;
+	char addrname[INET_ADDRSTRLEN];
 	int replies_received;
 
-	if (argc != 2)
-		exit_error("no ip provided\n");
+	destination_addr = parse_arguments(argv, argc);
 	if (signal(SIGALRM, send_ping) == SIG_ERR)
 		exit_error("failed to set SIGALRM handling behavior\n");
 	if (signal(SIGINT, sigint_handler) == SIG_ERR)
@@ -39,7 +40,7 @@ int main(int argc, char **argv)
 		exit_error("failed to set SIGQUIT handling behavior\n");
 
 	ft_memset(&g_params, 0, sizeof(t_ping_params));
-	init_ping(&g_params, argv[1], address_str);
+	init_ping(&g_params, destination_addr, addrname);
 
 	gettimeofday(&start, NULL);
 	send_ping(SIGALRM);
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
 		{
 			t_ping_request* req = get_request(&reply, g_params.address, g_params.pid);
 			if (req != NULL)
-				log_reply(&reply, req, address_str);
+				log_reply(&reply, req, addrname);
 		}
 		else
 		{
@@ -59,7 +60,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	replies_received = print_statistics(g_params.requests, argv[1], start);
+	replies_received = print_statistics(g_params.requests, destination_addr, start);
 	clean_all();
 	return replies_received ? 0 : 1;
 }
