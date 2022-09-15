@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:44:01 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 23:09:17 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/15 01:51:16 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,23 +16,32 @@
 #include "ft_ping.h"
 #include "args.h"
 
+extern t_ping_params g_params;
+
 char* parse_arguments(char** args, int count)
 {
 	char* address = NULL;
 	int i;
+	int j;
 
 	for (i = 1; i < count; i++)
 	{
 		if (args[i][0] == '-') // it's an option
 		{
-			switch (args[i][1])
+			for (j = 0; args[i][j] != '\0'; i++)
 			{
-				case 'h':
-					print_usage(0);
-				case 'v':
-					break;
-				default:
-					print_usage(args[i][1]);
+				switch (args[i][j])
+				{
+					case 'h':
+						print_usage(0);
+						break;
+					case 'v':
+						g_params.options.verbose = 1;
+						break;
+					default:
+						print_usage(args[i][1]);
+						break;
+				}
 			}
 		}
 		else // it's an address

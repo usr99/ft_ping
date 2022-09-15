@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:46:56 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 22:43:48 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/15 01:30:01 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,14 @@
 # include "icmp.h"
 # include "libft.h"
 
+typedef struct s_options
+{
+	int verbose;
+} t_options;
+
 typedef struct s_ping_params
 {
+	t_options options;
 	int sockfd;
 	pid_t pid;
 	int icmp_count;
