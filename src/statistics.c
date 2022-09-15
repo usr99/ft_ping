@@ -123,7 +123,7 @@ float compute_exponential_moving_avg(t_list* requests)
 	return ewma;
 }
 
-int print_statistics(t_list* requests, struct timeval start_time)
+int print_statistics(t_list* requests, const char* destination, struct timeval start_time)
 {
 	int req_sent, res_recvd, loss_percentage;
 	float min, max, avg, mdev;
@@ -132,7 +132,10 @@ int print_statistics(t_list* requests, struct timeval start_time)
 	mdev = compute_standard_deviation(requests, avg, req_sent);
 	loss_percentage = 100 * (req_sent - res_recvd) / req_sent;
 
-	printf("\n--- %s ping statistics ---\n", g_params.hostname);
+	if (g_params.hostname)
+		printf("\n--- %s ping statistics ---\n", g_params.hostname);
+	else
+		printf("\n--- %s ping statistics ---\n", destination);
 	printf(
 		"%d packets transmitted, %d received, %d%% packet loss, time %dms\n",
 		req_sent, res_recvd, loss_percentage, (int)get_duration_ms(start_time)

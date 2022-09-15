@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 17:20:10 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/14 20:09:12 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,6 @@ int main(int argc, char **argv)
 	char address_str[INET_ADDRSTRLEN];
 	int replies_received;
 
-	ft_memset(&g_params, 0, sizeof(t_ping_params));
-
 	if (argc != 2)
 		exit_error("no ip provided\n");
 	if (signal(SIGALRM, send_ping) == SIG_ERR)
@@ -40,13 +38,9 @@ int main(int argc, char **argv)
 	if (signal(SIGQUIT, print_stats_sigquit) == SIG_ERR)
 		exit_error("failed to set SIGQUIT handling behavior\n");
 
-	init_ping(&g_params, argv[1]);
+	ft_memset(&g_params, 0, sizeof(t_ping_params));
+	init_ping(&g_params, argv[1], address_str);
 
-	/* Convert ip address into a string format */
-	if (!inet_ntop(AF_INET, &g_params.address->sin_addr, address_str, INET_ADDRSTRLEN))	
-		exit_error("failed to convert address into a string format\n");
-
-	printf("PING %s (%s) %d(%d) bytes of data.\n", g_params.hostname, address_str, PAYLOAD_SIZE, PACKET_SIZE);
 	gettimeofday(&start, NULL);
 	send_ping(SIGALRM);
 	while (!g_params.finished)
@@ -65,12 +59,12 @@ int main(int argc, char **argv)
 		}
 	}
 
-	replies_received = print_statistics(g_params.requests, start);
+	replies_received = print_statistics(g_params.requests, argv[1], start);
 	clean_all();
 	return replies_received ? 0 : 1;
 }
 
-void init_ping(t_ping_params* params, const char* destination)
+void init_ping(t_ping_params* params, const char* destination, char* addrname)
 {
 	struct addrinfo* results;
 	struct addrinfo hint;
@@ -96,15 +90,38 @@ void init_ping(t_ping_params* params, const char* destination)
 	if (results->ai_addrlen != sizeof(struct sockaddr_in))
 		exit_error("bad address structure\n");
 	ft_memcpy(params->address, results->ai_addr, results->ai_addrlen);
-	params->hostname = ft_strdup(results->ai_canonname);
-	if (!params->hostname)
-		exit_error("alloc failed\n");
+	
+	/* Handles the special case "ft_ping 0" which must ping localhost */
+	if (params->address->sin_addr.s_addr == 0)
+	{
+		params->address->sin_addr.s_addr = 0x0100007F; // localhost (127.0.0.1)
+		ft_strlcpy(addrname, "127.0.0.1", INET_ADDRSTRLEN);
+	}
+	else
+	{
+		/* Convert ip address into a string format */
+		if (!inet_ntop(AF_INET, &g_params.address->sin_addr, addrname, INET_ADDRSTRLEN))
+			exit_error("failed to convert address into a string format\n");
+		/* Only set hostname if it's not equal to the ip address */
+		if (ft_strncmp(results->ai_canonname, addrname, INET_ADDRSTRLEN) != 0)
+		{
+			params->hostname = ft_strdup(results->ai_canonname);
+			if (!params->hostname)
+				exit_error("alloc failed\n");
+		}
+	}
 	freeaddrinfo(results);
 
 	/* Initialize the last fields */
 	params->pid = getpid();
 	params->icmp_count = 1;
 	params->requests = NULL;
+
+	if (params->hostname)
+		printf("PING %s", params->hostname);
+	else
+		printf("PING %s", destination);
+	printf(" (%s) %d(%d) bytes of data.\n", addrname, PAYLOAD_SIZE, PACKET_SIZE);
 }
 
 void send_ping(int signum)
@@ -132,10 +149,13 @@ void log_reply(t_reply* reply, t_ping_request* req, const char* address)
 	{
 		if (req->elapsed_time < 1.f)
 			precision = 3;
-		printf("%ld bytes from %s (%s): icmp_seq=%d ttl=%d time=%.*f ms\n",
-			sizeof(t_icmp),
-			g_params.hostname,
-			address,
+
+		printf("%ld bytes from ", sizeof(t_icmp));
+		if (g_params.hostname)
+			printf("%s (%s)", g_params.hostname, address);
+		else
+			printf("%s", address);
+		printf(": icmp_seq=%d ttl=%d time=%.*f ms\n",
 			req->icmp_sequence,
 			reply->ip_header.ttl,
 			precision, req->elapsed_time
