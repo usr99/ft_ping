@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 04:00:27 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 19:19:17 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,10 +52,13 @@ int main(int argc, char **argv)
 		if (icmp_type != -1)
 		{
 			req = update_request(&icmpmsg);
-			if (icmp_type == ICMP_ECHOREPLY)
-				log_reply(&icmpmsg, req, addrname);
-			else
-				log_error(&icmpmsg);
+			if (g_params.options.quiet != 1)
+			{
+				if (icmp_type == ICMP_ECHOREPLY)
+					log_reply(&icmpmsg, req, addrname);
+				else
+					log_error(&icmpmsg);
+			}
 			free(icmpmsg.ip);
 		}
 	}
@@ -69,8 +72,6 @@ void init_ping(t_ping_params* params, const char* destination, char* addrname)
 {
 	struct addrinfo* results;
 	struct addrinfo hint;
-
-	ft_memset(&g_params, 0, sizeof(t_ping_params));
 
 	/* Create a raw socket for ICMP protocol */
 	params->sockfd = socket(AF_INET, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMP);

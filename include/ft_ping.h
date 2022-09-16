@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:46:56 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 03:57:26 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 19:03:10 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,12 @@
 typedef struct s_options
 {
 	int verbose;
+	int quiet;
+	int count;
+	int interval;
+	int preload;
+	int ttl;
+	int	pattern;
 } t_options;
 
 typedef struct s_ping_params

@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:44:01 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 03:13:22 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 19:18:45 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,11 @@ char* parse_arguments(char** args, int count)
 	int i;
 	int j;
 
+	g_params.options.interval = 1;
+	g_params.options.count = -1;
+	g_params.options.ttl = -1;
+	g_params.options.preload = 1;
+
 	for (i = 1; i < count; i++)
 	{
 		if (args[i][0] == '-') // it's an option
@@ -38,6 +43,9 @@ char* parse_arguments(char** args, int count)
 					case 'v':
 						g_params.options.verbose = 1;
 						break;
+					case 'q':
+						g_params.options.quiet = 1;
+						break;
 					default:
 						print_usage(args[i][1]);
 						break;
@@ -51,7 +59,7 @@ char* parse_arguments(char** args, int count)
 			address = args[i];
 		}
 	}
-
+	
 	if (!address)
 		exit_error("usage error: Destination address required");
 	return address;
