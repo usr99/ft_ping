@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:36:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 17:13:48 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 03:18:12 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,8 @@ void clean_all()
 void exit_error(const char* message)
 {
 	clean_all();
-	ft_putstr_fd(message, STDERR_FILENO);
+	ft_putstr_fd("ping: ", STDERR_FILENO);
+	ft_putendl_fd(message, STDERR_FILENO);
 	exit(2);
 }
 

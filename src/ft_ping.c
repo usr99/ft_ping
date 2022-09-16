@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 02:45:43 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 03:18:46 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,11 +36,11 @@ int main(int argc, char **argv)
 
 	destination_addr = parse_arguments(argv, argc);
 	if (signal(SIGALRM, send_ping) == SIG_ERR)
-		exit_error("failed to set SIGALRM handling behavior\n");
+		exit_error("failed to set SIGALRM handling behavior");
 	if (signal(SIGINT, sigint_handler) == SIG_ERR)
-		exit_error("failed to set SIGINT handling behavior\n");
+		exit_error("failed to set SIGINT handling behavior");
 	if (signal(SIGQUIT, print_stats_sigquit) == SIG_ERR)
-		exit_error("failed to set SIGQUIT handling behavior\n");
+		exit_error("failed to set SIGQUIT handling behavior");
 
 	init_ping(&g_params, destination_addr, addrname);
 
@@ -75,7 +75,7 @@ void init_ping(t_ping_params* params, const char* destination, char* addrname)
 	/* Create a raw socket for ICMP protocol */
 	params->sockfd = socket(AF_INET, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMP);
 	if (g_params.sockfd == -1)
-		exit_error("failed to create socket\n");
+		exit_error("Socket creation failed");
 
 	/* DNS lookup to find the address under the domain name */
 	ft_memset(&hint, 0, sizeof(struct addrinfo));
@@ -84,14 +84,14 @@ void init_ping(t_ping_params* params, const char* destination, char* addrname)
 	hint.ai_protocol = IPPROTO_ICMP;
 	hint.ai_flags = AI_CANONNAME;
 	if (getaddrinfo(destination, NULL, &hint, &results) != 0)
-		exit_error("failed to resolve host\n");
+		exit_error("Name or service not known");
 
 	/* Copy address and hostname before freeing the results */
 	params->address = malloc(sizeof(struct sockaddr_in));
 	if (!params->address)
-		exit_error("alloc failed\n");
+		exit_error("alloc failed");
 	if (results->ai_addrlen != sizeof(struct sockaddr_in))
-		exit_error("bad address structure\n");
+		exit_error("bad address structure");
 	ft_memcpy(params->address, results->ai_addr, results->ai_addrlen);
 	
 	/* Handles the special case "ft_ping 0" which must ping localhost */
@@ -104,13 +104,13 @@ void init_ping(t_ping_params* params, const char* destination, char* addrname)
 	{
 		/* Convert ip address into a string format */
 		if (!inet_ntop(AF_INET, &g_params.address->sin_addr, addrname, INET_ADDRSTRLEN))
-			exit_error("failed to convert address into a string format\n");
+			exit_error("failed to convert address into a string format");
 		/* Only set hostname if it's not equal to the ip address */
 		if (ft_strncmp(results->ai_canonname, addrname, INET_ADDRSTRLEN) != 0)
 		{
 			params->hostname = ft_strdup(results->ai_canonname);
 			if (!params->hostname)
-				exit_error("alloc failed\n");
+				exit_error("alloc failed");
 		}
 	}
 	freeaddrinfo(results);
@@ -135,10 +135,10 @@ void send_ping(int signum)
 
 	t_icmp_echo packet = create_echo_message(g_params.pid, g_params.icmp_count);
 	if (sendto(g_params.sockfd, &packet, sizeof(t_icmp_echo), 0, (struct sockaddr*)g_params.address, sizeof(struct sockaddr_in)) == -1)
-		exit_error("failed to send message\n");
+		exit_error("failed to send message");
 
 	if (!push_new_node(&g_params.requests, g_params.icmp_count))
-		exit_error("alloc failed\n");
+		exit_error("alloc failed");
 
 	g_params.icmp_count++;
 	alarm(g_params.finished ? 0 : 1);
@@ -157,7 +157,7 @@ t_ping_request* update_request(t_icmp_msg* message)
 
 	node = get_stat(g_params.requests, sequence);
 	if (!node)
-		exit_error("unexpected error\n"); // should never happen
+		exit_error("unexpected error"); // should never happen
 	req = (t_ping_request*)node->content;
 
 	if (req->state != WAITING_REPLY)
@@ -166,7 +166,7 @@ t_ping_request* update_request(t_icmp_msg* message)
 		t_ping_request *duplicate;
 		duplicate = push_new_node(&g_params.requests, req->icmp_sequence);
 		if (!duplicate)
-			exit_error("alloc failed\n");
+			exit_error("alloc failed");
 		duplicate->elapsed_time = get_duration_ms(*(struct timeval*)message->payload);
 		duplicate->state = DUPLICATE;
 		return duplicate;
@@ -246,7 +246,7 @@ void log_error(t_icmp_msg* err)
 
 	src.s_addr = err->ip->saddr;
 	if (!inet_ntop(AF_INET, &src, addr, INET_ADDRSTRLEN))
-		exit_error("failed to convert address into a string format\n");
+		exit_error("failed to convert address into a string format");
 
 	printf("From %s (%s) icmp_seq=%d %s\n",
 		addr, addr,

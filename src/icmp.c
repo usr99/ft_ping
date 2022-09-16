@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 17:56:39 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 03:05:51 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 03:18:02 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ int recv_icmp_message(int sock, t_icmp_msg* message)
 	{
 		if (errno == EAGAIN)
 			return -1;
-		exit_error("read error\n");
+		exit_error("read error");
 	}
 	else if (bytes_recvd < PACKET_SIZE)
 		return -1; // packet is too short
@@ -96,7 +96,7 @@ int recv_icmp_message(int sock, t_icmp_msg* message)
 	
 	message->ip = (struct iphdr*)malloc(PACKET_SIZE);
 	if (!message->ip)
-		exit_error("alloc failed\n");
+		exit_error("alloc failed");
 	ft_memcpy(message->ip, payload, PACKET_SIZE);
 	message->icmp = (struct icmphdr*)((char*)message->ip + IPHEADER_SIZE);
 	message->payload = (void*)((char*)message->icmp + ICMPHEADER_SIZE);

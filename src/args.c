@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:44:01 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 03:10:32 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 03:13:22 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,13 +47,13 @@ char* parse_arguments(char** args, int count)
 		else // it's an address
 		{
 			if (address != NULL)
-				exit_error("usage error: Only one destination address must be provided\n");
+				exit_error("usage error: Only one destination address must be provided");
 			address = args[i];
 		}
 	}
 
 	if (!address)
-		exit_error("usage error: Destination address required\n");
+		exit_error("usage error: Destination address required");
 	return address;
 }
 
