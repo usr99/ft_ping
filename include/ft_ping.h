@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:46:56 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 00:48:53 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 03:57:26 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ void send_ping(int signum);
 t_ping_request* update_request(t_icmp_msg* message);
 void log_reply(t_icmp_msg* reply, t_ping_request* req, const char* address);
 void log_error(t_icmp_msg* err);
+int reverse_dns_lookup(char* hostname, size_t buflen, in_addr_t address);
 
 /* utils.c */
 void clean_all();

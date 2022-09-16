@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 03:18:46 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 04:00:27 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,7 +190,14 @@ t_ping_request* update_request(t_icmp_msg* message)
 
 void log_reply(t_icmp_msg* reply, t_ping_request* req, const char* address)
 {
+	const char* addrname;
+	char hostname[1024];
 	int precision = 1;
+
+	if (reverse_dns_lookup(hostname, 1024, reply->ip->saddr) != 0)
+		addrname = g_params.hostname;
+	else
+		addrname = hostname;
 
 	if (reply->status == OK)
 	{
@@ -198,8 +205,8 @@ void log_reply(t_icmp_msg* reply, t_ping_request* req, const char* address)
 			precision = 3;
 
 		printf("%ld bytes from ", sizeof(t_icmp_echo));
-		if (g_params.hostname)
-			printf("%s (%s)", g_params.hostname, address);
+		if (addrname)
+			printf("%s (%s)", addrname, address);
 		else
 			printf("%s", address);
 		printf(": icmp_seq=%d ttl=%d time=%.*f ms\n",
@@ -211,7 +218,7 @@ void log_reply(t_icmp_msg* reply, t_ping_request* req, const char* address)
 	else
 	{
 		printf("From %s: icmp_seq=%d BAD CHECKSUM",
-			g_params.hostname ? g_params.hostname : address,
+			addrname ? addrname : address,
 			req->icmp_sequence
 		);
 	}
@@ -234,9 +241,17 @@ void log_error(t_icmp_msg* err)
 		3, 4, 5, 11, 12, 13, 14, 15, 16
 	};
 
+	const char* addrname;
+	char hostname[1024];
+
 	unsigned int idx;
 	char addr[INET_ADDRSTRLEN] = { 0 };
 	struct in_addr src;
+
+	if (reverse_dns_lookup(hostname, 1024, err->ip->saddr) != 0)
+		addrname = g_params.hostname;
+	else
+		addrname = hostname;
 
 	for (
 		idx = 0;
@@ -249,8 +264,21 @@ void log_error(t_icmp_msg* err)
 		exit_error("failed to convert address into a string format");
 
 	printf("From %s (%s) icmp_seq=%d %s\n",
-		addr, addr,
+		addrname ? addrname : addr, addr,
 		((t_icmp_echo*)((char*)err->payload + IPHEADER_SIZE))->header.un.echo.sequence,
 		error_messages[idx]
+	);
+}
+
+int reverse_dns_lookup(char* hostname, size_t buflen, in_addr_t address)
+{
+	struct sockaddr_in addr = { 0 };
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = address;
+
+	return getnameinfo(
+		(struct sockaddr*)&addr, sizeof(struct sockaddr_in),
+		hostname, buflen,
+		NULL, 0, 0
 	);
 }

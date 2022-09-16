@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 17:56:39 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 03:18:02 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 03:58:59 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,6 @@ int recv_icmp_message(int sock, t_icmp_msg* message)
 {
 	struct msghdr msg = { 0 };
 	struct iovec iov = { 0 };
-	struct sockaddr_in addrbuf = { 0 };
 	char payload[1000] = { 0 };
 
 	/* Fill message buffer before recv call */
@@ -77,8 +76,6 @@ int recv_icmp_message(int sock, t_icmp_msg* message)
 	iov.iov_len = 1000;
 	msg.msg_iov = &iov;
 	msg.msg_iovlen = 1;
-	msg.msg_name = &addrbuf;
-	msg.msg_namelen = sizeof(struct sockaddr_in);
 
 	ssize_t bytes_recvd = recvmsg(sock, &msg, MSG_TRUNC);
 	if (bytes_recvd == -1)
