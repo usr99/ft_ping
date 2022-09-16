@@ -6,39 +6,41 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 17:56:39 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 19:43:43 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 03:05:51 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <sys/time.h>
 #include <netdb.h>
+#include <errno.h>
+
 #include "ft_ping.h"
 #include "statistics.h"
 
 extern t_ping_params g_params;
 
-t_icmp create_icmp_packet(pid_t pid, int count)
+t_icmp_echo create_echo_message(pid_t pid, int count)
 {
-	t_icmp packet;
+	t_icmp_echo msg;
 
-	packet.header.type = ICMP_ECHO;
-	packet.header.code = 0;
-	packet.header.un.echo.id = pid;
-	packet.header.un.echo.sequence = count;
+	msg.header.type = ICMP_ECHO;
+	msg.header.code = 0;
+	msg.header.un.echo.id = pid;
+	msg.header.un.echo.sequence = count;
 
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
-	ft_memset(packet.payload, 0, PAYLOAD_SIZE);
-	ft_memcpy(packet.payload, &tv, sizeof(tv));
+	ft_memset(msg.payload, 0, PAYLOAD_SIZE);
+	ft_memcpy(msg.payload, &tv, sizeof(tv));
 	
-	packet.header.checksum = 0;
-	packet.header.checksum = compute_checksum((uint16_t*)&packet, sizeof(t_icmp));
-	return packet;
+	msg.header.checksum = 0;
+	msg.header.checksum = compute_checksum((uint16_t*)&msg, sizeof(t_icmp_echo));
+	return msg;
 }
 
 uint16_t compute_checksum(uint16_t* data, size_t bytes)
 {
-	uint32_t sum = data[0];
+	uint32_t sum = *data;
 	size_t i;
 
 	for (i = 1; i < bytes / 2; i++)
@@ -50,105 +52,103 @@ uint16_t compute_checksum(uint16_t* data, size_t bytes)
 	return ~sum;
 }
 
-int receive_reply(int sock, t_reply* reply)
+t_msg_status compare_checksums(struct icmphdr* icmp)
 {
-	struct msghdr msg;
-	struct iovec iov;
-	struct sockaddr_in address_buffer;
-	char buffer[PACKET_SIZE];
+	uint16_t oldcs;
+	uint16_t newcs;
 
-	ft_memset(&msg, 0, sizeof(msg));
-	iov.iov_base = buffer;
-	iov.iov_len = PACKET_SIZE;
-	msg.msg_iov = &iov;
-	msg.msg_iovlen = 1;
-	msg.msg_name = &address_buffer;
-	msg.msg_namelen = sizeof(struct sockaddr_in);
-
-	ssize_t bytes_read = recvmsg(sock, &msg, MSG_TRUNC);
-	if (bytes_read == -1)
-		return -1;
-
-	// char host[1024] = { '\0' };
-	// char svc[1024] = { '\0' };
-	// int ret = getnameinfo(
-	// 	(struct sockaddr*)&address_buffer, sizeof(struct sockaddr_in),
-	// 	host, sizeof(host),
-	// 	svc, sizeof(svc), 0
-	// );
-	// printf("%d %s %s\n", ret, host, svc);
-
-	reply->ip_header = *(struct iphdr*)iov.iov_base;
-	reply->icmp_header = *(struct icmphdr*)(char*)(iov.iov_base + IPHEADER_SIZE);
-	reply->timestamp = *(struct timeval*)(iov.iov_base + IPHEADER_SIZE + ICMPHEADER_SIZE);
-	reply->source_addr = address_buffer.sin_addr.s_addr;
-	return 0;
+	oldcs = icmp->checksum;
+	icmp->checksum = 0;
+	newcs = compute_checksum((uint16_t*)icmp, sizeof(t_icmp_echo));
+	icmp->checksum = oldcs;
+	return (oldcs == newcs) ? OK : BAD_CHECKSUM;
 }
 
-t_ping_request* get_request(t_reply* reply, struct sockaddr_in* addr, pid_t pid)
+int recv_icmp_message(int sock, t_icmp_msg* message)
 {
-	t_list* node;
-	t_ping_request* req;
-	t_ping_request* duplicate;
-	t_reply_code new_state;
-	
-	/* Check that the packet is ours */
-	if (reply->source_addr != addr->sin_addr.s_addr)
-		return NULL; // not sent by the pinged host
-	if (reply->icmp_header.type != ICMP_ECHOREPLY)
-		return NULL; // not a ping reply
-	if (reply->icmp_header.un.echo.id != pid)
-		return NULL; // reply for another ping process
+	struct msghdr msg = { 0 };
+	struct iovec iov = { 0 };
+	struct sockaddr_in addrbuf = { 0 };
+	char payload[1000] = { 0 };
 
-	/* Check the icmp sequence */
-	node = get_stat(g_params.requests, reply->icmp_header.un.echo.sequence);
-	if (!node)
-		return NULL; // icmp sequence doesn't match any of the requests sent
-	req = (t_ping_request*)node->content;
+	/* Fill message buffer before recv call */
+	ft_memset(&msg, 0, sizeof(msg));
+	iov.iov_base = payload;
+	iov.iov_len = 1000;
+	msg.msg_iov = &iov;
+	msg.msg_iovlen = 1;
+	msg.msg_name = &addrbuf;
+	msg.msg_namelen = sizeof(struct sockaddr_in);
 
-	new_state = get_reply_state(req, reply);
-	if (new_state == DUPLICATE)
+	ssize_t bytes_recvd = recvmsg(sock, &msg, MSG_TRUNC);
+	if (bytes_recvd == -1)
 	{
-		/* Duplicate the ping request for further rtt calculations */
-		duplicate = push_new_node(&g_params.requests, req->icmp_sequence);
-		if (!duplicate)
-			exit_error("alloc failed\n");
-		duplicate->elapsed_time = get_duration_ms(reply->timestamp);
-		duplicate->state = DUPLICATE;
+		if (errno == EAGAIN)
+			return -1;
+		exit_error("read error\n");
+	}
+	else if (bytes_recvd < PACKET_SIZE)
+		return -1; // packet is too short
+
+	message->status = validate_message(payload);
+	if (message->status == NOT_OURS)
+		return -1;
+	
+	message->ip = (struct iphdr*)malloc(PACKET_SIZE);
+	if (!message->ip)
+		exit_error("alloc failed\n");
+	ft_memcpy(message->ip, payload, PACKET_SIZE);
+	message->icmp = (struct icmphdr*)((char*)message->ip + IPHEADER_SIZE);
+	message->payload = (void*)((char*)message->icmp + ICMPHEADER_SIZE);
+	return message->icmp->type;
+}
+
+t_msg_status validate_message(char* buffer)
+{
+	t_icmp_msg msg;
+	t_msg_status st;
+
+	msg.ip = (struct iphdr*)buffer;
+	if (msg.ip->protocol != IPPROTO_ICMP)
+		return NOT_OURS; // not ICMP protocol
+
+	msg.icmp = (struct icmphdr*)(buffer + IPHEADER_SIZE);
+	if (msg.icmp->type == ICMP_ECHO)
+		return NOT_OURS; // ignore icmp echo requests
+
+	if (msg.icmp->type == ICMP_ECHOREPLY)
+	{
+		if (msg.ip->saddr != g_params.address->sin_addr.s_addr)
+			return NOT_OURS; // not sent by the pinged host
 	}
 	else
 	{
-		/* Update ping request status */
-		req->state = new_state;
-		req->elapsed_time = get_duration_ms(reply->timestamp);
+		/* ICMP error messages contain the original message as payload */
+		st = validate_error_message(buffer);
+		if (st != OK)
+			return st; // original message is not valid
+		msg.icmp = (struct icmphdr*)(buffer + IPHEADER_SIZE * 2 + ICMPHEADER_SIZE);
 	}
-	return req;
+
+	if (msg.icmp->un.echo.id != g_params.pid)
+		return NOT_OURS; // message for another ping process
+
+	return compare_checksums((struct icmphdr*)(buffer + IPHEADER_SIZE));
 }
 
-t_reply_code get_reply_state(t_ping_request* req, t_reply* reply)
+t_msg_status validate_error_message(char* buffer)
 {
-	/* Check that we had not already received a reply for this ping request */
-	if (req->state != WAITING_REPLY)
-		return DUPLICATE;
-	
-	/* Compare ICMP checksums */
-	t_icmp icmp_cpy;
-	icmp_cpy.header = reply->icmp_header;
-	ft_memset(icmp_cpy.payload, 0, PAYLOAD_SIZE);
-	ft_memcpy(icmp_cpy.payload, &reply->timestamp, sizeof(struct timeval));
-	icmp_cpy.header.checksum = 0;
-	icmp_cpy.header.checksum = compute_checksum((uint16_t*)&icmp_cpy, sizeof(t_icmp));
-	if (reply->icmp_header.checksum != icmp_cpy.header.checksum)
-		return CORRUPTED;
+	t_icmp_msg msg;
 
-	/* Compare IP checksums */
-	uint8_t ip_cpy[PACKET_SIZE];
-	ft_memcpy(ip_cpy, &reply->ip_header, sizeof(struct iphdr));
-	ft_memcpy(ip_cpy + IPHEADER_SIZE, &icmp_cpy, sizeof(t_icmp));
-	((struct iphdr*)ip_cpy)->check = 0;
-	((struct iphdr*)ip_cpy)->check = compute_checksum((uint16_t*)ip_cpy, PACKET_SIZE);
-	if (reply->ip_header.check != ((struct iphdr*)ip_cpy)->check)
-		return CORRUPTED;
+	msg.ip = (struct iphdr*)(buffer + IPHEADER_SIZE + ICMPHEADER_SIZE);
+	if (msg.ip->protocol != IPPROTO_ICMP)
+		return NOT_OURS; // not ICMP protocol
+	if (msg.ip->daddr != g_params.address->sin_addr.s_addr)
+		return NOT_OURS; // original destination is not the host we're pinging
 
-	return SUCCESS;
+	msg.icmp = (struct icmphdr*)(buffer + IPHEADER_SIZE * 2 + ICMPHEADER_SIZE);
+	if (msg.icmp->type != ICMP_ECHO)
+		return NOT_OURS; // we sent only echo requests so it's not our error
+
+	return OK;
 }

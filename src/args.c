@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:44:01 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/15 01:51:16 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 03:10:32 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ char* parse_arguments(char** args, int count)
 	{
 		if (args[i][0] == '-') // it's an option
 		{
-			for (j = 0; args[i][j] != '\0'; i++)
+			for (j = 1; args[i][j] != '\0'; j++)
 			{
 				switch (args[i][j])
 				{

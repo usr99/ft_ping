@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 22:44:11 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 02:45:43 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,9 @@ int main(int argc, char **argv)
 	struct timeval start;
 	char* destination_addr;
 	char addrname[INET_ADDRSTRLEN];
+	t_icmp_msg icmpmsg = { 0 };
+	t_ping_request* req;
+	int icmp_type;
 	int replies_received;
 
 	destination_addr = parse_arguments(argv, argc);
@@ -39,24 +42,21 @@ int main(int argc, char **argv)
 	if (signal(SIGQUIT, print_stats_sigquit) == SIG_ERR)
 		exit_error("failed to set SIGQUIT handling behavior\n");
 
-	ft_memset(&g_params, 0, sizeof(t_ping_params));
 	init_ping(&g_params, destination_addr, addrname);
 
 	gettimeofday(&start, NULL);
 	send_ping(SIGALRM);
 	while (!g_params.finished)
 	{
-		t_reply reply;
-		if (receive_reply(g_params.sockfd, &reply) == 0)
+		icmp_type = recv_icmp_message(g_params.sockfd, &icmpmsg);
+		if (icmp_type != -1)
 		{
-			t_ping_request* req = get_request(&reply, g_params.address, g_params.pid);
-			if (req != NULL)
-				log_reply(&reply, req, addrname);
-		}
-		else
-		{
-			if (errno != EAGAIN)
-				exit_error("read error\n");
+			req = update_request(&icmpmsg);
+			if (icmp_type == ICMP_ECHOREPLY)
+				log_reply(&icmpmsg, req, addrname);
+			else
+				log_error(&icmpmsg);
+			free(icmpmsg.ip);
 		}
 	}
 
@@ -69,6 +69,8 @@ void init_ping(t_ping_params* params, const char* destination, char* addrname)
 {
 	struct addrinfo* results;
 	struct addrinfo hint;
+
+	ft_memset(&g_params, 0, sizeof(t_ping_params));
 
 	/* Create a raw socket for ICMP protocol */
 	params->sockfd = socket(AF_INET, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMP);
@@ -131,8 +133,8 @@ void send_ping(int signum)
 	if (g_params.finished)
 		return ;
 
-	t_icmp packet = create_icmp_packet(g_params.pid, g_params.icmp_count);
-	if (sendto(g_params.sockfd, &packet, sizeof(t_icmp), 0, (struct sockaddr*)g_params.address, sizeof(struct sockaddr_in)) == -1)
+	t_icmp_echo packet = create_echo_message(g_params.pid, g_params.icmp_count);
+	if (sendto(g_params.sockfd, &packet, sizeof(t_icmp_echo), 0, (struct sockaddr*)g_params.address, sizeof(struct sockaddr_in)) == -1)
 		exit_error("failed to send message\n");
 
 	if (!push_new_node(&g_params.requests, g_params.icmp_count))
@@ -142,28 +144,113 @@ void send_ping(int signum)
 	alarm(g_params.finished ? 0 : 1);
 }
 
-void log_reply(t_reply* reply, t_ping_request* req, const char* address)
+t_ping_request* update_request(t_icmp_msg* message)
+{
+	t_list* node;
+	t_ping_request* req;
+	uint16_t sequence;
+
+	if (message->icmp->type == ICMP_ECHOREPLY)
+		sequence = message->icmp->un.echo.sequence;
+	else
+		sequence = ((t_icmp_echo*)((char*)message->payload + IPHEADER_SIZE))->header.un.echo.sequence;
+
+	node = get_stat(g_params.requests, sequence);
+	if (!node)
+		exit_error("unexpected error\n"); // should never happen
+	req = (t_ping_request*)node->content;
+
+	if (req->state != WAITING_REPLY)
+	{
+		/* Duplicate the ping request for further rtt calculations */
+		t_ping_request *duplicate;
+		duplicate = push_new_node(&g_params.requests, req->icmp_sequence);
+		if (!duplicate)
+			exit_error("alloc failed\n");
+		duplicate->elapsed_time = get_duration_ms(*(struct timeval*)message->payload);
+		duplicate->state = DUPLICATE;
+		return duplicate;
+	}
+
+	if (message->status == BAD_CHECKSUM)
+		req->state = CORRUPTED;
+	else
+	{
+		if (message->icmp->type != ICMP_ECHOREPLY)
+			req->state = ICMP_ERR;
+		else
+		{
+			req->state = SUCCESS;
+			req->elapsed_time = get_duration_ms(*(struct timeval*)message->payload);
+		}
+	}
+
+	return req;
+}
+
+void log_reply(t_icmp_msg* reply, t_ping_request* req, const char* address)
 {
 	int precision = 1;
 
-	if (req->state == SUCCESS)
+	if (reply->status == OK)
 	{
 		if (req->elapsed_time < 1.f)
 			precision = 3;
 
-		printf("%ld bytes from ", sizeof(t_icmp));
+		printf("%ld bytes from ", sizeof(t_icmp_echo));
 		if (g_params.hostname)
 			printf("%s (%s)", g_params.hostname, address);
 		else
 			printf("%s", address);
 		printf(": icmp_seq=%d ttl=%d time=%.*f ms\n",
 			req->icmp_sequence,
-			reply->ip_header.ttl,
+			reply->ip->ttl,
 			precision, req->elapsed_time
 		);
 	}
-	else if (req->state == DUPLICATE)
-		printf("%d was duplicated\n", req->icmp_sequence);
-	else if (req->state == CORRUPTED)
-		printf("%d was corrupted\n", req->icmp_sequence);
+	else
+	{
+		printf("From %s: icmp_seq=%d BAD CHECKSUM",
+			g_params.hostname ? g_params.hostname : address,
+			req->icmp_sequence
+		);
+	}
+}
+
+void log_error(t_icmp_msg* err)
+{
+	static const char* error_messages[] = {
+		"Destination Unreachable",
+		"Source Quench",
+		"Redirect",
+		"Time Exceeded",
+		"Parameter Problem",
+		"Timestamp",
+		"Timestamp Reply",
+		"Information Request",
+		"Information Reply"
+	};
+	static const uint8_t errtypes[] = {
+		3, 4, 5, 11, 12, 13, 14, 15, 16
+	};
+
+	unsigned int idx;
+	char addr[INET_ADDRSTRLEN] = { 0 };
+	struct in_addr src;
+
+	for (
+		idx = 0;
+		idx < sizeof(errtypes) && errtypes[idx] != err->icmp->type;
+		idx++
+	);
+
+	src.s_addr = err->ip->saddr;
+	if (!inet_ntop(AF_INET, &src, addr, INET_ADDRSTRLEN))
+		exit_error("failed to convert address into a string format\n");
+
+	printf("From %s (%s) icmp_seq=%d %s\n",
+		addr, addr,
+		((t_icmp_echo*)((char*)err->payload + IPHEADER_SIZE))->header.un.echo.sequence,
+		error_messages[idx]
+	);
 }

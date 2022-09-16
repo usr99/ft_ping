@@ -25,7 +25,6 @@ t_ping_request* push_new_node(t_list** ping_request, int seq)
 	if (!data)
 		return NULL;
 	data->state = WAITING_REPLY;
-	data->elapsed_time = 0;
 	data->icmp_sequence = seq;
 
 	t_list* node = ft_lstnew(data);
@@ -52,7 +51,7 @@ t_list* get_stat(t_list* requests, int icmpseq)
 
 t_statistics compute_statistics(t_list* requests)
 {
-	t_ping_request* data;
+	t_ping_request* req;
 	t_list* node;
 	t_statistics st = { 0 };
 
@@ -66,19 +65,20 @@ t_statistics compute_statistics(t_list* requests)
 	*/
 	for (node = requests; node != NULL; node = node->next)
 	{
-		data = (t_ping_request*)node->content;
+		req = (t_ping_request*)node->content;
 		
-		if (data->state != WAITING_REPLY)
-			st.replies[data->state]++;
-		if (data->state != DUPLICATE)
+		if (req->state != WAITING_REPLY)
+			st.replies[req->state]++;
+		if (req->state != DUPLICATE)
 			st.sent++;
-
-		if (st.min == -1.f || data->elapsed_time < st.min)
-			st.min = data->elapsed_time;
-		if (st.max == -1.f || data->elapsed_time > st.max)
-			st.max = data->elapsed_time;
-
-		st.avg += data->elapsed_time;
+		if (req->state == SUCCESS || req->state == DUPLICATE)
+		{
+			if (st.min == -1.f || req->elapsed_time < st.min)
+				st.min = req->elapsed_time;
+			if (st.max == -1.f || req->elapsed_time > st.max)
+				st.max = req->elapsed_time;
+			st.avg += req->elapsed_time;
+		}
 	}
 	if (st.sent + st.replies[DUPLICATE] != 0)
 		st.avg /= (st.sent + st.replies[DUPLICATE]);
@@ -87,35 +87,37 @@ t_statistics compute_statistics(t_list* requests)
 	return st;
 }
 
-float compute_standard_deviation(t_list* requests, float average, int req_sent)
+float compute_standard_deviation(t_list* requests, float average, int nreplies)
 {
-	t_ping_request* data;
+	t_ping_request* req;
 	t_list* node;
 	float mdev = 0.f;
 
 	/* Compute the standard deviation from the average round-trip time */
 	for (node = requests; node != NULL; node = node->next)
 	{
-		data = (t_ping_request*)node->content;
-		mdev += ft_fpow(data->elapsed_time - average, 2);
+		req = (t_ping_request*)node->content;
+		if (req->state == SUCCESS || req->state == DUPLICATE)
+			mdev += ft_fpow(req->elapsed_time - average, 2);
 	}
-	if (req_sent != 0)
-		mdev = ft_fsqrt(mdev / req_sent);
+	if (nreplies != 0)
+		mdev = ft_fsqrt(mdev / nreplies);
 
 	return mdev;
 }
 
 float compute_exponential_moving_avg(t_list* requests)
 {
-	t_ping_request* data;
+	t_ping_request* req;
 	t_list* node;
 	float ewma = 0.f;
 
 	/* Compute the Exponentially Weighted Moving Average (EWMA) of RTTs */
 	for (node = requests; node != NULL; node = node->next)
 	{
-		data = (t_ping_request*)node->content;
-		ewma = 0.9 * ewma + 0.1 * data->elapsed_time;
+		req = (t_ping_request*)node->content;
+		if (req->state == SUCCESS || req->state == DUPLICATE)
+			ewma = 0.9 * ewma + 0.1 * req->elapsed_time;
 	}
 	return ewma;
 }
@@ -126,7 +128,7 @@ int print_statistics(t_list* requests, const char* destination, struct timeval s
 	float mdev;
 
 	stats = compute_statistics(requests);
-	mdev = compute_standard_deviation(requests, stats.avg, stats.sent);
+	mdev = compute_standard_deviation(requests, stats.avg, stats.replies[SUCCESS] + stats.replies[DUPLICATE]);
 
 	if (g_params.hostname)
 		printf("\n--- %s ping statistics ---\n", g_params.hostname);

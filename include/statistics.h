@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/13 15:16:16 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 23:36:26 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 00:41:35 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,10 +30,6 @@ typedef struct s_statistics
 	int sent;
 	int replies[4];
 	int loss;
-	// int recv;
-	// int duplicates;
-	// int corrupted;
-	// int errors;
 
 	// round-trip time
 	float min;
@@ -43,15 +39,15 @@ typedef struct s_statistics
 
 typedef struct s_ping_request
 {
+	int icmp_sequence;
 	t_reply_code state;
 	float elapsed_time;
-	int icmp_sequence;
 } t_ping_request;
 
 t_ping_request* push_new_node(t_list** requests, int seq);
 t_list* get_stat(t_list* requests, int icmpseq);
 t_statistics compute_statistics(t_list* requests);
-float compute_standard_deviation(t_list* requests, float average, int req_sent);
+float compute_standard_deviation(t_list* requests, float average, int nreplies);
 float compute_exponential_moving_avg(t_list* requests);
 int print_statistics(t_list* requests, const char* destination, struct timeval start_time);
 void print_stats_sigquit(int signum);
