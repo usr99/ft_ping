@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/11 17:56:39 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 03:58:59 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 03:27:24 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,8 +84,6 @@ int recv_icmp_message(int sock, t_icmp_msg* message)
 			return -1;
 		exit_error("read error");
 	}
-	else if (bytes_recvd < PACKET_SIZE)
-		return -1; // packet is too short
 
 	message->status = validate_message(payload);
 	if (message->status == NOT_OURS)
