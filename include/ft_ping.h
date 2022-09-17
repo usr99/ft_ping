@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:46:56 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 19:03:10 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 22:45:37 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,12 @@
 
 typedef struct s_options
 {
-	int verbose;
-	int quiet;
-	int count;
+	uint8_t verbose;
+	uint8_t quiet;
+	int64_t count;
 	int interval;
 	int preload;
-	int ttl;
+	int16_t ttl;
 	int	pattern;
 } t_options;
 

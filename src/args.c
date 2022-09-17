@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:44:01 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 22:10:51 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 22:42:55 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ char* parse_arguments(char** args, int count)
 	{
 		if (args[i][0] == '-') // it's an option
 		{
+			done = 0;
 			for (j = 1; args[i][j] != '\0' && !done; j++)
 			{
 				switch (args[i][j])
@@ -49,7 +50,12 @@ char* parse_arguments(char** args, int count)
 						break;
 					case 't':
 						j++;
-						g_params.options.ttl = parse_option_value(args, count, &i, &j);
+						g_params.options.ttl = parse_option_value(args, count, &i, j, 0, UINT8_MAX);	
+						done = 1;
+						break;
+					case 'c':
+						j++;
+						g_params.options.count = parse_option_value(args, count, &i, j, 1, INT64_MAX);
 						done = 1;
 						break;
 					default:
@@ -72,36 +78,35 @@ char* parse_arguments(char** args, int count)
 	return address;
 }
 
-int parse_option_value(char **args, int count, int* start_str, int* start_char)
+long parse_option_value(char **args, int count, int* start_str, int start_char, long min, long max)
 {
-	int value;
+	long value;
 	int i;
 	int j;
 
 	for (i = *start_str; i < count; i++)
 	{
-		for (j = *start_char; args[i][j] != '\0'; j++)
+		for (j = start_char; args[i][j] != '\0'; j++)
 		{
 			if (ft_isdigit(args[i][j]) || args[i][j] == '-')
 			{
-				value = ft_atoi(args[i] + j);
+				value = atol(args[i] + j);
 
-				if (value < 1 || value > 255)
+				if (value < min || value > max)
 				{
-					dprintf(STDERR_FILENO, "ping: invalid argument: \'%s\': out of range: ", args[i] + *start_char);
-					dprintf(STDERR_FILENO, "0 <= value <= 255\n");
+					dprintf(STDERR_FILENO, "ping: invalid argument: \'%s\': out of range: ", args[i] + start_char);
+					dprintf(STDERR_FILENO, "%ld <= value <= %ld\n", min, max);
 					exit(2);					
 				}
 
 				for (j = j + 1; ft_isdigit(args[i][j]); j++);
 				if (args[i][j] != '\0')
 				{
-					dprintf(STDERR_FILENO, "ping: invalid argument: \'%s\'\n", args[i] + *start_char);
+					dprintf(STDERR_FILENO, "ping: invalid argument: \'%s\'\n", args[i] + start_char);
 					exit(2);
 				}
 
 				*start_str = i;
-				*start_char = j - 1;
 				return value;
 			}
 			else if (args[i][j] != ' ')
@@ -110,7 +115,7 @@ int parse_option_value(char **args, int count, int* start_str, int* start_char)
 				exit(2);
 			}
 		}
-		*start_char = 0;
+		start_char = 0;
 	}
 	dprintf(STDERR_FILENO, "ping: option requires an argument -- \'%c\'\n", 't');
 	print_usage();

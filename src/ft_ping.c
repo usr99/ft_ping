@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 22:18:54 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 23:06:50 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,10 @@ int main(int argc, char **argv)
 		icmp_type = recv_icmp_message(g_params.sockfd, &icmpmsg);
 		if (icmp_type != -1)
 		{
+			g_params.options.count--;
+			if (g_params.options.count == 0)
+				g_params.finished = 1;
+
 			req = update_request(&icmpmsg);
 			if (g_params.options.quiet != 1)
 			{
@@ -81,7 +85,7 @@ void init_ping(t_ping_params* params, const char* destination, char* addrname)
 	/* Set user-defined ttl */
 	if (params->options.ttl != -1)
 	{
-		if (setsockopt(params->sockfd, IPPROTO_IP, IP_TTL, &params->options.ttl, sizeof(int)) != 0)
+		if (setsockopt(params->sockfd, IPPROTO_IP, IP_TTL, &params->options.ttl, sizeof(int16_t)) != 0)
 			exit_error("Failed to set TTL value");
 	}
 
