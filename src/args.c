@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:44:01 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 23:37:19 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 03:43:47 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,12 @@ void print_usage()
 	dprintf(STDERR_FILENO, "\nUsage\n  ping [options] <destination>\n");
 	dprintf(STDERR_FILENO, "\nOptions:\n");
 	dprintf(STDERR_FILENO, "  <destination>\tdns name or ip address\n");
+	dprintf(STDERR_FILENO, "  -c <count>\tstop after <count> replies\n");
 	dprintf(STDERR_FILENO, "  -h\t\tprint help and exit\n");
+	dprintf(STDERR_FILENO, "  -l <preload>\tsend <preload> number of packages while waiting replies\n");
+	dprintf(STDERR_FILENO, "  -q\t\tquiet output\n");
+	dprintf(STDERR_FILENO, "  -t <ttl>\tdefine time to live\n");
 	dprintf(STDERR_FILENO, "  -v\t\tverbose output\n");
+	dprintf(STDERR_FILENO, "  -w <deadline>\treply wait <deadline> in seconds\n");
 	exit(2);
 }
