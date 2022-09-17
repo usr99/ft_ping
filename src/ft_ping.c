@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 23:06:50 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 23:27:39 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 	t_icmp_msg icmpmsg = { 0 };
 	t_ping_request* req;
 	int icmp_type;
-	int replies_received;
+	int replies_received = 0;
 
 	destination_addr = parse_arguments(argv, argc);
 	if (signal(SIGALRM, send_ping) == SIG_ERR)
@@ -51,8 +51,8 @@ int main(int argc, char **argv)
 		icmp_type = recv_icmp_message(g_params.sockfd, &icmpmsg);
 		if (icmp_type != -1)
 		{
-			g_params.options.count--;
-			if (g_params.options.count == 0)
+			replies_received++;
+			if (replies_received == g_params.options.count)
 				g_params.finished = 1;
 
 			req = update_request(&icmpmsg);
@@ -65,9 +65,12 @@ int main(int argc, char **argv)
 			}
 			free(icmpmsg.ip);
 		}
+
+		if (g_params.options.deadline != -1 && get_duration_ms(start) / 1000 > g_params.options.deadline)
+			g_params.finished = 1;
 	}
 
-	replies_received = print_statistics(g_params.requests, destination_addr, start);
+	print_statistics(g_params.requests, destination_addr, start);
 	clean_all();
 	return replies_received ? 0 : 1;
 }
@@ -153,7 +156,10 @@ void send_ping(int signum)
 		exit_error("alloc failed");
 
 	g_params.icmp_count++;
-	alarm(g_params.finished ? 0 : 1);
+	if (g_params.options.count != -1 && g_params.icmp_count > g_params.options.count)
+		alarm(0);
+	else
+		alarm(g_params.finished ? 0 : 1);
 }
 
 t_ping_request* update_request(t_icmp_msg* message)

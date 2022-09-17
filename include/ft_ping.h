@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:46:56 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 22:45:37 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 23:09:53 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ typedef struct s_options
 	int interval;
 	int preload;
 	int16_t ttl;
+	int32_t deadline;
 	int	pattern;
 } t_options;
 

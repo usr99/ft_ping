@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:44:01 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 22:42:55 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 23:27:19 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ char* parse_arguments(char** args, int count)
 	g_params.options.count = -1;
 	g_params.options.ttl = -1;
 	g_params.options.preload = 1;
+	g_params.options.deadline = -1;
 
 	for (i = 1; i < count; i++)
 	{
@@ -49,13 +50,15 @@ char* parse_arguments(char** args, int count)
 						g_params.options.quiet = 1;
 						break;
 					case 't':
-						j++;
-						g_params.options.ttl = parse_option_value(args, count, &i, j, 0, UINT8_MAX);	
+						g_params.options.ttl = parse_option_value(args, count, &i, j+1, 0, UINT8_MAX);	
 						done = 1;
 						break;
 					case 'c':
-						j++;
-						g_params.options.count = parse_option_value(args, count, &i, j, 1, INT64_MAX);
+						g_params.options.count = parse_option_value(args, count, &i, j+1, 1, INT64_MAX);
+						done = 1;
+						break;
+					case 'w':
+						g_params.options.deadline = parse_option_value(args, count, &i, j+1, 0, INT32_MAX);
 						done = 1;
 						break;
 					default:

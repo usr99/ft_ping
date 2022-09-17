@@ -122,7 +122,7 @@ float compute_exponential_moving_avg(t_list* requests)
 	return ewma;
 }
 
-int print_statistics(t_list* requests, const char* destination, struct timeval start_time)
+void print_statistics(t_list* requests, const char* destination, struct timeval start_time)
 {
 	t_statistics stats;
 	float mdev;
@@ -150,7 +150,6 @@ int print_statistics(t_list* requests, const char* destination, struct timeval s
 			stats.min, stats.avg, stats.max, mdev
 		);
 	}
-	return stats.replies[SUCCESS];
 }
 
 void print_stats_sigquit(int signum)

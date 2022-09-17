@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/13 15:16:16 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 00:41:35 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 23:22:00 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ t_list* get_stat(t_list* requests, int icmpseq);
 t_statistics compute_statistics(t_list* requests);
 float compute_standard_deviation(t_list* requests, float average, int nreplies);
 float compute_exponential_moving_avg(t_list* requests);
-int print_statistics(t_list* requests, const char* destination, struct timeval start_time);
+void print_statistics(t_list* requests, const char* destination, struct timeval start_time);
 void print_stats_sigquit(int signum);
 
 #endif
