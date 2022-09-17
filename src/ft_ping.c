@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/17 03:39:08 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 03:50:23 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,7 +227,7 @@ void log_reply(t_icmp_msg* reply, t_ping_request* req, const char* address)
 			precision = 3;
 
 		printf("%ld bytes from ", sizeof(t_icmp_echo));
-		if (addrname)
+		if (addrname && g_params.options.numeric_output == 0)
 			printf("%s (%s)", addrname, address);
 		else
 			printf("%s", address);
@@ -240,7 +240,7 @@ void log_reply(t_icmp_msg* reply, t_ping_request* req, const char* address)
 	else
 	{
 		printf("From %s: icmp_seq=%d BAD CHECKSUM",
-			addrname ? addrname : address,
+			(addrname && g_params.options.numeric_output == 0) ? addrname : address,
 			req->icmp_sequence
 		);
 	}
@@ -285,8 +285,11 @@ void log_error(t_icmp_msg* err)
 	if (!inet_ntop(AF_INET, &src, addr, INET_ADDRSTRLEN))
 		exit_error("failed to convert address into a string format");
 
-	printf("From %s (%s) icmp_seq=%d %s\n",
-		addrname ? addrname : addr, addr,
+	if (addrname && g_params.options.numeric_output == 0)
+		printf("From %s (%s) ", addrname, addr);
+	else
+		printf("From %s ", addr);
+	printf("icmp_seq=%d %s\n",
 		((t_icmp_echo*)((char*)err->payload + IPHEADER_SIZE))->header.un.echo.sequence,
 		error_messages[idx]
 	);

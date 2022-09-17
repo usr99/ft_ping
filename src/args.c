@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:44:01 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/17 03:43:47 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 03:46:31 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,6 @@ char* parse_arguments(char** args, int count)
 	int i;
 	int j;
 
-	g_params.options.interval = 1;
 	g_params.options.count = -1;
 	g_params.options.ttl = -1;
 	g_params.options.preload = 1;
@@ -64,7 +63,10 @@ char* parse_arguments(char** args, int count)
 					case 'l':
 						g_params.options.preload = parse_option_value(args, count, &i, j+1, 1, UINT16_MAX);
 						done = 1;
-						break;						
+						break;
+					case 'n':
+						g_params.options.numeric_output = 1;
+						break;				
 					default:
 						dprintf(STDERR_FILENO, "ping: invalid option -- \'%c\'\n", args[i][j]);
 						print_usage();
