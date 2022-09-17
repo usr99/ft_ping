@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 23:36:03 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 03:39:08 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 			{
 				if (icmp_type == ICMP_ECHOREPLY)
 					log_reply(&icmpmsg, req, addrname);
-				else
+				else if (g_params.options.verbose)
 					log_error(&icmpmsg);
 			}
 			free(icmpmsg.ip);
