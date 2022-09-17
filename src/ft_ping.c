@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 23:27:39 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 23:36:03 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,7 +144,6 @@ void init_ping(t_ping_params* params, const char* destination, char* addrname)
 
 void send_ping(int signum)
 {
-	(void)signum;
 	if (g_params.finished)
 		return ;
 
@@ -159,7 +158,12 @@ void send_ping(int signum)
 	if (g_params.options.count != -1 && g_params.icmp_count > g_params.options.count)
 		alarm(0);
 	else
-		alarm(g_params.finished ? 0 : 1);
+	{
+		if (g_params.icmp_count <= g_params.options.preload)
+			send_ping(signum);
+		else
+			alarm(g_params.finished ? 0 : 1);
+	}
 }
 
 t_ping_request* update_request(t_icmp_msg* message)
