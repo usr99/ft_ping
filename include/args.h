@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:43:34 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 22:43:50 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 19:29:34 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define _ARGS_H_
 
 char* parse_arguments(char** args, int count);
-void print_usage(char option);
+int parse_option_value(char **args, int count, int* start_str, int* start_char);
+void print_usage();
 
 #endif

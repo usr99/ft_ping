@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/16 19:19:17 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/16 22:18:54 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,8 +75,15 @@ void init_ping(t_ping_params* params, const char* destination, char* addrname)
 
 	/* Create a raw socket for ICMP protocol */
 	params->sockfd = socket(AF_INET, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMP);
-	if (g_params.sockfd == -1)
+	if (params->sockfd == -1)
 		exit_error("Socket creation failed");
+
+	/* Set user-defined ttl */
+	if (params->options.ttl != -1)
+	{
+		if (setsockopt(params->sockfd, IPPROTO_IP, IP_TTL, &params->options.ttl, sizeof(int)) != 0)
+			exit_error("Failed to set TTL value");
+	}
 
 	/* DNS lookup to find the address under the domain name */
 	ft_memset(&hint, 0, sizeof(struct addrinfo));
