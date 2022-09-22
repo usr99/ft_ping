@@ -35,6 +35,9 @@ int main(int argc, char **argv)
 	int replies_received = 0;
 
 	destination_addr = parse_arguments(argv, argc);
+	if (getuid() != 0)
+		exit_error("user must have root privileges !");
+
 	if (signal(SIGALRM, send_ping) == SIG_ERR)
 		exit_error("failed to set SIGALRM handling behavior");
 	if (signal(SIGINT, sigint_handler) == SIG_ERR)
