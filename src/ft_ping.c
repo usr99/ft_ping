@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 16:48:55 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/17 03:50:23 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/22 15:48:52 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,8 @@ int main(int argc, char **argv)
 	int icmp_type;
 	int replies_received = 0;
 
-	destination_addr = parse_arguments(argv, argc);
+	g_params.program_name = argv[0];
+	destination_addr = parse_arguments(argc, argv);
 	if (getuid() != 0)
 		exit_error("user must have root privileges !");
 

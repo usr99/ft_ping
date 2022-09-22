@@ -16,7 +16,7 @@ SRC = ft_memset.c ft_bzero.c ft_memcpy.c \
 		ft_lstnew.c ft_lstadd_front.c ft_lstsize.c ft_lstlast.c ft_lstadd_back.c \
 		ft_lstdelone.c ft_lstclear.c ft_lstiter.c ft_lstmap.c ft_lstdup.c
 SRC += ft_flags.c ft_print_csp.c ft_print_diux.c ft_print_utils.c ft_printf.c # printf
-SRC += ft_pow.c ft_sqrt.c ft_abs.c # math
+SRC += ft_pow.c ft_sqrt.c ft_abs.c ft_strtol.c ft_strtof.c # math
 SRC += opt_parser.c # cmdline arguments parser
 SRC += ft_itoa_base.c get_next_line.c ft_free_map.c ft_clearstr.c # utils
 
@@ -45,9 +45,11 @@ CLEAN = ${RED}Cleaning${RESET}
 ##################################################
 
 ${OBJDIR}%.o: %.c
-		@${CC} ${CFLAGS} -c $< ${INC} -o $@
+	@echo "${COMPILE} $<"
+	@${CC} ${CFLAGS} -c $< ${INC} -o $@
 
 ${TARGET}: ${OBJDIR} ${OBJS}
+	@echo "${BUILD} $@"
 	@ar -rcs $@ ${OBJS}
 
 ${OBJDIR}:
@@ -60,9 +62,11 @@ ${OBJDIR}:
 all: ${TARGET}
 
 clean:
+	@echo "${CLEAN} objects"
 	${RM} ${OBJDIR}
 
 fclean:	clean
+	@echo "${CLEAN} library"
 	${RM} ${TARGET}
 
 re: fclean all

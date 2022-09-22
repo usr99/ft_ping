@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 00:38:13 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/19 12:27:54 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/22 16:23:39 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,11 +25,8 @@ enum e_boolval
 /* Value types expected in a program/option parameter */
 typedef enum e_paramtype
 {
-	PARAM_T_INT8, // not implemented yet
-	PARAM_T_INT16, // not implemented yet
-	PARAM_T_INT32,
-	PARAM_T_INT64, // not implemented yet
-	PARAM_T_FLOAT32, // not implemented yet
+	PARAM_T_INT64,
+	PARAM_T_FLOAT64,
 	PARAM_T_STRING
 } t_paramtype;
 
@@ -44,6 +41,7 @@ typedef enum e_argtype
 /* Option parser error codes */
 typedef enum e_errtype
 {
+	ERR_NONE,
 	ERR_BAD_OPTION,
 	ERR_MISSING_PARAM,
 	ERR_BAD_PARAM_TYPE
@@ -80,13 +78,10 @@ typedef struct s_expected_opts
 /* Describe an argument returned after parsing */
 typedef struct s_argument
 {
+	char name;
+	void *value;
 	t_argtype type;
-	union
-	{
-		struct s_optinfo opt;
-		struct s_paraminfo param;
-		struct s_errinfo err;
-	} info;
+	t_errtype errtype;
 } t_argument;
 
 #endif

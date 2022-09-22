@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:44:01 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/17 03:46:31 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/22 16:37:21 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,29 +18,39 @@
 
 extern t_ping_params g_params;
 
-char* parse_arguments(char** args, int count)
+char* parse_arguments(int argc, char** argv)
 {
-	char* address = NULL;
-	int done = 0;
-	int i;
-	int j;
+	static t_expected_opts valid_options[N_OPTIONS_SUPPORTED] = {
+		{ .name = 'v', .has_param = false },
+		{ .name = 'q', .has_param = false },
+		{ .name = 'n', .has_param = false },
+		{ .name = 'c', .has_param = true, .paramtype = PARAM_T_INT64 },
+		{ .name = 'l', .has_param = true, .paramtype = PARAM_T_INT64 },
+		{ .name = 't', .has_param = true, .paramtype = PARAM_T_INT64 },
+		{ .name = 'w', .has_param = true, .paramtype = PARAM_T_INT64 }
+	};
 
+	char* address = NULL;
+	t_argument arg;
+	long long val;
+	int ret;
+	
 	g_params.options.count = -1;
 	g_params.options.ttl = -1;
 	g_params.options.preload = 1;
 	g_params.options.deadline = -1;
 
-	for (i = 1; i < count; i++)
+	while ((ret = ft_getarg(argc, argv, valid_options, N_OPTIONS_SUPPORTED, &arg)) == 0)
 	{
-		if (args[i][0] == '-') // it's an option
+		switch (arg.type)
 		{
-			done = 0;
-			for (j = 1; args[i][j] != '\0' && !done; j++)
-			{
-				switch (args[i][j])
+			case ARG_T_OPTION:
+				switch (arg.name)
 				{
 					case 'h':
-						print_usage();
+						print_usage(); break;
+					case 'n':
+						g_params.options.numeric_output = 1;
 						break;
 					case 'v':
 						g_params.options.verbose = 1;
@@ -49,91 +59,73 @@ char* parse_arguments(char** args, int count)
 						g_params.options.quiet = 1;
 						break;
 					case 't':
-						g_params.options.ttl = parse_option_value(args, count, &i, j+1, 0, UINT8_MAX);	
-						done = 1;
+						val = *(long long*)arg.value;
+						if (val < 1 || val > UINT8_MAX)
+							exit_error("invalid argument for -t option: out of range: 1 <= value <= 255");
+						g_params.options.ttl = val;
 						break;
 					case 'c':
-						g_params.options.count = parse_option_value(args, count, &i, j+1, 1, INT64_MAX);
-						done = 1;
-						break;
-					case 'w':
-						g_params.options.deadline = parse_option_value(args, count, &i, j+1, 0, INT32_MAX);
-						done = 1;
+						val = *(long long*)arg.value;
+						if (val < 1 || val > INT64_MAX)
+							exit_error("invalid argument for -c option: out of range: 1 <= value <= 9223372036854775807");
+						g_params.options.count = val;
 						break;
 					case 'l':
-						g_params.options.preload = parse_option_value(args, count, &i, j+1, 1, UINT16_MAX);
-						done = 1;
+						val = *(long long*)arg.value;
+						if (val < 1 || val > UINT16_MAX)
+							exit_error("invalid argument for -l option: out of range: 1 <= value <= 65535");
+						g_params.options.preload = val;
 						break;
-					case 'n':
-						g_params.options.numeric_output = 1;
-						break;				
-					default:
-						dprintf(STDERR_FILENO, "ping: invalid option -- \'%c\'\n", args[i][j]);
-						print_usage();
+					case 'w':
+						val = *(long long*)arg.value;
+						if (val < 0 || val > INT32_MAX)
+							exit_error("invalid argument for -w option: out of range: 0 <= value <= 2147483647");
+						g_params.options.deadline = val;
+						break;
+					default: // should never happen
 						break;
 				}
-			}
-		}
-		else // it's an address
-		{
-			if (address != NULL)
-				exit_error("usage error: Only one destination address must be provided");
-			address = args[i];
+				if (arg.value)
+					free(arg.value);
+				break ;
+			case ARG_T_PARAMETER:
+				if (address)
+					exit_error("usage error: Only one destination address must be provided");
+				address = arg.value;
+				break ;
+			case ARG_T_ERROR:
+				switch (arg.errtype)
+				{
+					case ERR_BAD_OPTION:
+						dprintf(STDERR_FILENO, "%s: invalid option -- \'%c\'\n",
+							g_params.program_name, arg.name);
+						print_usage(); break;
+					case ERR_MISSING_PARAM:
+						dprintf(STDERR_FILENO, "%s: option requires an argument -- \'%c\'\n",
+							g_params.program_name, arg.name);
+						print_usage(); break;
+					case ERR_BAD_PARAM_TYPE:
+						dprintf(STDERR_FILENO, "%s: invalid argument: \'%s\'\n",
+							g_params.program_name, (char*)arg.value);
+						break;
+					default:
+						break; // should never happen
+				}
+				break ;
 		}
 	}
+
+	if (ret == -2) // code to indicate memory allocation failure
+		exit_error("Out of memory");
 	
 	if (!address)
 		exit_error("usage error: Destination address required");
 	return address;
 }
 
-long parse_option_value(char **args, int count, int* start_str, int start_char, long min, long max)
-{
-	long long value;
-	int i;
-	int j;
-
-	for (i = *start_str; i < count; i++)
-	{
-		for (j = start_char; args[i][j] != '\0'; j++)
-		{
-			if (ft_isdigit(args[i][j]) || args[i][j] == '-')
-			{
-				value = atol(args[i] + j);
-
-				if (value < min || value > max)
-				{
-					dprintf(STDERR_FILENO, "ping: invalid argument: \'%s\': out of range: ", args[i] + start_char);
-					dprintf(STDERR_FILENO, "%ld <= value <= %ld\n", min, max);
-					exit(2);					
-				}
-
-				for (j = j + 1; ft_isdigit(args[i][j]); j++);
-				if (args[i][j] != '\0')
-				{
-					dprintf(STDERR_FILENO, "ping: invalid argument: \'%s\'\n", args[i] + start_char);
-					exit(2);
-				}
-
-				*start_str = i;
-				return value;
-			}
-			else if (args[i][j] != ' ')
-			{
-				dprintf(STDERR_FILENO, "ping: invalid argument: \'%s\'\n", args[i] + j);
-				exit(2);
-			}
-		}
-		start_char = 0;
-	}
-	dprintf(STDERR_FILENO, "ping: option requires an argument -- \'%c\'\n", 't');
-	print_usage();
-	return 0;
-}
-
 void print_usage()
 {
-	dprintf(STDERR_FILENO, "\nUsage\n  ping [options] <destination>\n");
+	dprintf(STDERR_FILENO, "\nUsage\n  %s [options] <destination>\n", g_params.program_name);
 	dprintf(STDERR_FILENO, "\nOptions:\n");
 	dprintf(STDERR_FILENO, "  <destination>\tdns name or ip address\n");
 	dprintf(STDERR_FILENO, "  -c <count>\tstop after <count> replies\n");

@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 00:24:30 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/18 11:11:26 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/22 16:06:58 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,6 @@ t_expected_opts* find_option(char optname, t_expected_opts* options, int count);
 void* parse_option_parameter(const char* str, t_paramtype type);
 
 void jump_to_next_arg(int* arg, int* character);
-void set_error(t_argument* arg, t_errtype type, char name);
+void set_error(t_argument* arg, t_errtype type, char name, void* value);
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/10 17:46:56 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/17 03:46:18 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/22 16:08:54 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,18 +15,8 @@
 
 # include <sys/time.h>
 # include "icmp.h"
+# include "args.h"
 # include "libft.h"
-
-typedef struct s_options
-{
-	uint8_t verbose;
-	uint8_t quiet;
-	int64_t count;
-	uint16_t preload;
-	int16_t ttl;
-	int32_t deadline;
-	uint8_t numeric_output;
-} t_options;
 
 typedef struct s_ping_params
 {
@@ -38,6 +28,7 @@ typedef struct s_ping_params
 	char* hostname;
 	t_list* requests;
 	int finished;
+	char* program_name;
 } t_ping_params;
 
 /* ft_ping.c */
