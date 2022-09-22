@@ -6,11 +6,11 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/13 20:53:10 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/13 22:23:34 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 22:55:01 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./libft.h"
+#include "math.h"
 
 int	ft_pow(int nb, int power)
 {

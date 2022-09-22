@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./libft.h"
+#include "mandatory.h"
 
 static void	clear(t_btree *root, void (*del)(void *))
 {

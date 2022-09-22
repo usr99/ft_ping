@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./libft.h"
+#include "mandatory.h"
 
 t_list	*ft_lstdup(t_list *src, int length)
 {

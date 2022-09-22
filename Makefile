@@ -49,23 +49,22 @@ ${OBJDIR}:
 
 ${LIBFT}:
 	@echo "${BUILD} libft"
-	@${MAKE} --no-print-directory bonus -C libft
+	@${MAKE} --no-print-directory -C libft
 
 ##################################################
-#  				   USUAL RULES					 #./
+#  				   USUAL RULES					 #
 ##################################################
 
 all: ${TARGET}
 
 clean:
 	@echo "${CLEAN} objects"
-	@rm -rf ${OBJDIR}
-	@echo "${CLEAN} libft"
-	@${MAKE} --no-print-directory clean -C libft
+	rm -rf ${OBJDIR}
 
 fclean: clean
 	@echo "${CLEAN} ${TARGET}"
-	@rm -rf ${TARGET}
+	rm -rf ${TARGET}
+	@echo "${CLEAN} libft"
 	@${MAKE} --no-print-directory fclean -C libft
 
 re: fclean all

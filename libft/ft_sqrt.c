@@ -6,11 +6,11 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/13 21:11:58 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/14 00:06:40 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 22:55:03 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./libft.h"
+#include "math.h"
 
 int	ft_sqrt(int nb)
 {

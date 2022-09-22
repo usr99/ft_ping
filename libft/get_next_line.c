@@ -6,11 +6,14 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/11/23 15:18:27 by mamartin          #+#    #+#             */
-/*   Updated: 2021/01/23 18:38:19 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 22:51:16 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
+#include <unistd.h>
+#include <stdlib.h>
+#include "mandatory.h"
+#include "utils.h"
 
 #define BUFFER_SIZE 1024
 

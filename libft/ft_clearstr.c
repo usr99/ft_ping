@@ -6,11 +6,13 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/06 15:32:33 by mamartin          #+#    #+#             */
-/*   Updated: 2021/03/06 15:34:17 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 22:51:42 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./libft.h"
+#include <stdlib.h>
+#include "utils.h"
+#include "mandatory.h"
 
 char	*ft_clearstr(char *str)
 {

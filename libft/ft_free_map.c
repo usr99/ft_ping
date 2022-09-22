@@ -6,11 +6,12 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/17 18:03:47 by mamartin          #+#    #+#             */
-/*   Updated: 2020/12/17 18:03:56 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 22:50:52 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
+#include <stdlib.h>
+#include "utils.h"
 
 void	ft_free_map(char **map)
 {

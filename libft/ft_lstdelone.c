@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./libft.h"
+#include "mandatory.h"
 
 void	ft_lstdelone(t_list *lst, void (*del)(void *))
 {

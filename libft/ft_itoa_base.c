@@ -6,11 +6,12 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/04 20:50:45 by mamartin          #+#    #+#             */
-/*   Updated: 2020/12/06 23:43:30 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/17 22:51:14 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./libft.h"
+#include <stdlib.h>
+#include "utils.h"
 
 static	int	sz_num(unsigned long long n, int base)
 {
