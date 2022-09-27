@@ -6,14 +6,14 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:43:34 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/22 16:16:59 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 20:20:01 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef _ARGS_H_
 # define _ARGS_H_
 
-#define N_OPTIONS_SUPPORTED 7
+#define N_OPTIONS_SUPPORTED 8
 
 typedef struct s_options
 {

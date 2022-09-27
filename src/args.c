@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/14 22:44:01 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/22 16:37:21 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 20:23:26 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ extern t_ping_params g_params;
 char* parse_arguments(int argc, char** argv)
 {
 	static t_expected_opts valid_options[N_OPTIONS_SUPPORTED] = {
+		{ .name = 'h', .has_param = false },
 		{ .name = 'v', .has_param = false },
 		{ .name = 'q', .has_param = false },
 		{ .name = 'n', .has_param = false },
@@ -60,24 +61,28 @@ char* parse_arguments(int argc, char** argv)
 						break;
 					case 't':
 						val = *(long long*)arg.value;
+						free(arg.value);
 						if (val < 1 || val > UINT8_MAX)
 							exit_error("invalid argument for -t option: out of range: 1 <= value <= 255");
 						g_params.options.ttl = val;
 						break;
 					case 'c':
 						val = *(long long*)arg.value;
+						free(arg.value);
 						if (val < 1 || val > INT64_MAX)
 							exit_error("invalid argument for -c option: out of range: 1 <= value <= 9223372036854775807");
 						g_params.options.count = val;
 						break;
 					case 'l':
 						val = *(long long*)arg.value;
+						free(arg.value);
 						if (val < 1 || val > UINT16_MAX)
 							exit_error("invalid argument for -l option: out of range: 1 <= value <= 65535");
 						g_params.options.preload = val;
 						break;
 					case 'w':
 						val = *(long long*)arg.value;
+						free(arg.value);
 						if (val < 0 || val > INT32_MAX)
 							exit_error("invalid argument for -w option: out of range: 0 <= value <= 2147483647");
 						g_params.options.deadline = val;
@@ -85,8 +90,6 @@ char* parse_arguments(int argc, char** argv)
 					default: // should never happen
 						break;
 				}
-				if (arg.value)
-					free(arg.value);
 				break ;
 			case ARG_T_PARAMETER:
 				if (address)
@@ -131,6 +134,7 @@ void print_usage()
 	dprintf(STDERR_FILENO, "  -c <count>\tstop after <count> replies\n");
 	dprintf(STDERR_FILENO, "  -h\t\tprint help and exit\n");
 	dprintf(STDERR_FILENO, "  -l <preload>\tsend <preload> number of packages while waiting replies\n");
+	dprintf(STDERR_FILENO, "  -n\t\tnumeric output only, no reverse dns lookup\n");
 	dprintf(STDERR_FILENO, "  -q\t\tquiet output\n");
 	dprintf(STDERR_FILENO, "  -t <ttl>\tdefine time to live\n");
 	dprintf(STDERR_FILENO, "  -v\t\tverbose output\n");
